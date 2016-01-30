@@ -36,3 +36,7 @@ Client pseudocode (see index.html, powered by socket.io)
 Server pseudocode is (see server.js)
 
  - set up a callback: on an incoming socket, do ntp.sync(socket);
+
+#NOTES
+
+1) Both Client and Server need Socket.io library. 

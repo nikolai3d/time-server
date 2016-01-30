@@ -88,6 +88,19 @@ io.sockets.on('connection', function (socket) {
   console.log("NTP SYNC done!");
 });
 
+//TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
+var ntpClient = require('ntp-client');
+ 
+ntpClient.getNetworkTime("pool.ntp.org", 123, function(err, date) {
+    if(err) {
+        console.error(err);
+        return;
+    }
+ 
+    console.log("Current time NTP time : " + date);
+  //  console.log(date); // Mon Jul 08 2013 21:31:31 GMT+0200 (Paris, Madrid (heure d’été)) 
+});
+
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
   var addr = server.address();
   console.log("Chat server listening at", addr.address + ":" + addr.port);
