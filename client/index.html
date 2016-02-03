@@ -12,17 +12,19 @@
     </style>
 
   </head>
-      <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/../bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
 
     <script src="/js/app.js"></script>
     <script src="/js/ntp.js"></script>
 
   <body >
     <div class="tx-out" ng-controller="TimeSyncController as timer">
-      Latency {{timer.fTitle}}
+      <p>Controller name: {{timer.fTitle}}</p>
+      <p>Controller data: {{timer.fStringData}}</p>
+      <p>Average delta: {{timer.fData.deltaData.fAverageServerNTPDelta}}</p>
     </div>
  
 

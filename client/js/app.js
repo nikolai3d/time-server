@@ -22,9 +22,11 @@ var app = angular.module('timesync', []);
     
         TC.data = []; //We need to initialize before request so page has something to show while loading.
         TC.fTitle = "UberTimeSync";
+        TC.fStringData = "No Data";
         gemsPromise.then(function(response)
             {
-            TC.data = response.data;
+            TC.fData = response.data;
+            TC.fStringData = JSON.stringify(TC.fData);
             }, 
         function(response) {
     var data = response.data,
