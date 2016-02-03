@@ -22,10 +22,7 @@ var io = socketio.listen(server);
 
 router.use(express.static(path.resolve(__dirname, 'client')));
 
-router.get('/lala', function (req, res) {
-  console.log("LALARequest\n");
-  res.send('Hello World!');
-});
+
 
 
 var messages = [];
@@ -94,42 +91,13 @@ io.sockets.on('connection', function(socket) {
   console.log("NTP SYNC done!");
 });
 
-//TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
-var ntpClient = require('ntp-client');
-
-
-function Chronos() {
-  this.serverNTPDelta = 0.0;
-
-
-  var chronosObject = this;
-
-  this.Synchronize = function() {
-    ntpClient.getNetworkTime("pool.ntp.org", 123, function(err, date) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-
-
-      var ntpMilliseconds = date.getMilliseconds();
-      var serverNow = new Date();
-      var serverMilliseconds = serverNow.getMilliseconds();
-      var serverNTPDelta = serverMilliseconds - ntpMilliseconds;
-
-      chronosObject.serverNTPDelta = serverNTPDelta;
-      console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
-      //  console.log(date); // Mon Jul 08 2013 21:31:31 GMT+0200 (Paris, Madrid (heure d’été)) 
-    });
-  };
-  this.TickInterval = setInterval(this.Synchronize, 1000);
-}
-
-
-var keeper = new Chronos();
-
 
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() {
   var addr = server.address();
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
+
+var timeServer = require('./timeServer');
+
+timeServer.createTimeServer(router);
+
