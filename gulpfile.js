@@ -8,6 +8,7 @@ var socketNTPJSPath = ["node_modules/socket-ntp/client/ntp.js"];
 var externalJSDepsPath = "client/bower_components/";
 gulp.task('copy-ntpjs', function() {
 
+    gutil.log("Copying " + socketNTPJSPath + " to " + externalJSDepsPath+"socket-ntp/");
     var srcNode = gulp.src(socketNTPJSPath);
     var destNode = gulp.dest(externalJSDepsPath+"socket-ntp/");
 

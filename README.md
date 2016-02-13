@@ -1,10 +1,11 @@
-
-     ,-----.,--.                  ,--. ,---.   ,--.,------.  ,------.
-    '  .--./|  | ,---. ,--.,--. ,-|  || o   \  |  ||  .-.  \ |  .---'
-    |  |    |  || .-. ||  ||  |' .-. |`..'  |  |  ||  |  \  :|  `--, 
-    '  '--'\|  |' '-' ''  ''  '\ `-' | .'  /   |  ||  '--'  /|  `---.
-     `-----'`--' `---'  `----'  `---'  `--'    `--'`-------' `------'
-    ----------------------------------------------------------------- 
+                                                                                                            
+_|_|_|_|_|  _|                                  _|_|_|                                                      
+    _|          _|_|_|  _|_|      _|_|        _|          _|_|    _|  _|_|  _|      _|    _|_|    _|  _|_|  
+    _|      _|  _|    _|    _|  _|_|_|_|        _|_|    _|_|_|_|  _|_|      _|      _|  _|_|_|_|  _|_|      
+    _|      _|  _|    _|    _|  _|                  _|  _|        _|          _|  _|    _|        _|        
+    _|      _|  _|    _|    _|    _|_|_|      _|_|_|      _|_|_|  _|            _|        _|_|_|  _|    
+    
+    
 
 
 Welcome to your Node.js project on Cloud9 IDE!
@@ -14,9 +15,14 @@ This chat example showcases how to use `socket.io` with a static `express` serve
 ## Installing all the dependencies
 You need both npm and bower 
     
+
     $ npm install
+
     $ bower install 
-    $ gulp 
+
+Finally to copy ntp.js from node_modules, since it doesn't have its own bower package, use: 
+
+    $ gulp copy-ntpjs
 
 ## Running the server
 
@@ -32,7 +38,7 @@ Once the server is running, open the project in the shape of 'https://projectnam
 
 1) This is a testbed project for the synchronizer https://github.com/calvinfo/socket-ntp 
 
-2) Synchronizer client side is client/js/ntp.js
+2) Synchronizer client side is bower_components/socket-ntp/ntp.js
 
 Client pseudocode (see index.html, powered by socket.io)
  - Initialize synchronizer on launch then check every 3 seconds, output into tx-out div at HTML page.
@@ -46,4 +52,4 @@ Server pseudocode is (see server.js)
 
 #NOTES
 
-1) Both Client and Server need Socket.io library. 
+1) Both Client and Server need Socket.io library. The package.json and bower.json should have all the necessary dependencies in.
