@@ -15,18 +15,17 @@ ____ _  _    ____ ___  ____ ____ ____ _  _ ____ ____ _ ____    ___  ____ ____  _
 ```    
 
 
-Welcome to Time Server (an Observeris project)!
+# Time Server (an Observeris project)!
 
 
 ## Installing all the dependencies
-You need both npm and bower 
+You need both npm and bower.
     
-
     $ npm install
 
     $ bower install 
 
-Finally to copy ntp.js & socket.io.js from node_modules, since ```ntp.js``` doesn't have its own bower package, (and ```socket.io``` bower does not contain ```socket.io.js```)   use: 
+Finally, to copy `ntp.js` & `socket.io.js` from node_modules, since `ntp.js` doesn't have its own bower package, (and `socket.io` bower does not contain `socket.io.js`)   use: 
 
     $ gulp copy-js
 
