@@ -26,9 +26,9 @@ You need both npm and bower
 
     $ bower install 
 
-Finally to copy ntp.js from node_modules, since it doesn't have its own bower package, use: 
+Finally to copy ntp.js & socket.io.js from node_modules, since ```ntp.js``` doesn't have its own bower package, (and ```socket.io``` bower does not contain ```socket.io.js```)   use: 
 
-    $ gulp copy-ntpjs
+    $ gulp copy-js
 
 ## Running the server
 
