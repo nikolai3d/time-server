@@ -9,7 +9,7 @@
 
         //Dependency injection: we need an $http service!
 
-        var gemsPromise = $http({
+        var timeRequest = $http({
             method: 'GET',
             url: '/doSynchronize.json'
         });
@@ -28,7 +28,8 @@
         TC.data = []; //We need to initialize before request so page has something to show while loading.
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
-        gemsPromise.then(function(response) {
+        
+        timeRequest.then(function(response) {
                 TC.fData = response.data;
                 TC.fStringData = JSON.stringify(TC.fData);
             },

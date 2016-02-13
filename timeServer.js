@@ -1,7 +1,8 @@
 var createTimeServer = function(expressServer) {
 
     expressServer.get('/doSynchronize.json', function(ireq, iResponse) {
-        console.log("doSynchronize Request\n");
+        
+        console.log("doSynchronize Request");
 
         var result = {
             deltaData: keeper.fDeltaData,
@@ -59,9 +60,9 @@ function Chronos() {
             //  console.log(date); // Mon Jul 08 2013 21:31:31 GMT+0200 (Paris, Madrid (heure d’été)) 
         });
     };
-    
+
     this.Synchronize();
-     
+
     this.TickInterval = setInterval(this.Synchronize, 10000);
 }
 
