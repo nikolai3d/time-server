@@ -38,7 +38,7 @@
     
     <p>Local Time: {{timer.fClientData.fSystemTime}}</p>
     <p>Most Precise Local Time: {{timer.fClientData.fMostPreciseTime}}</p>
-   
+    <p>Socket NTP offset: {{timer.fSocketNTPData}}</p>
   </div>
 
 
@@ -54,7 +54,7 @@
 
       var offset = window.ntp.offset(); // time offset from the server in ms
       //$("div.tx-out").html(offset+ " ms ");
-      console.log("TICK 1 " + offset);
+      //console.log("TICK 1 " + offset);
 
       window.setTimeout(timerTick, 3000);
     }

@@ -62,6 +62,8 @@
             };
 
 
+            TC.fSocketNTPData = window.ntp.offset();
+
 
         };
         
