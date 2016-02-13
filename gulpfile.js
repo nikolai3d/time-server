@@ -2,14 +2,17 @@ var gulp = require('gulp'),
     gutil = require('gulp-util');
     
     
-    gulp.task('coffee', function() {
 
-    var srcNode = gulp.src(coffeeSources);
-    var processNode = gcoffee({
-        bare: true
-    }).on('error', gutil.log);
-    var destNode = gulp.dest('components/scripts');
+var socketNTPJSPath = ["node_modules/socket-ntp/client/ntp.js"]
 
-    srcNode.pipe(processNode).pipe(destNode);
+var externalJSDepsPath = "client/bower_components";
+gulp.task('copy-ntpjs', function() {
+
+    var srcNode = gulp.src(socketNTPJSPath);
+    var destNode = gulp.dest(externalJSDepsPath+"/socket-ntp/");
+
+    srcNode.pipe(destNode);
 
 });
+
+gulp.task('default', ['copy-ntpjs']);
