@@ -1,0 +1,30 @@
+{
+  "name": "timeServer",
+  "description": "A time synchronizer client-server + chat example to showcase how to use `socket.io` with a static `express` server with `async` for control flow.",
+  "main": "server.js",
+  "authors": [
+    "Nikolai Svakhin <svakhine@adobe.com> (https://twitter.com/Nikolai3d)"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "time",
+    "server",
+    "synchronization",
+    "ntp"
+  ],
+  "homepage": "https://github.com/observeris/time-server",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "client/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.5.0",
+    "angular-route": "^1.5.0",
+    "angular-resource": "^1.5.0"
+  }
+}
