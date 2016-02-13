@@ -1,3 +1,5 @@
+
+```
                                                                                                             
 _|_|_|_|_|  _|                                  _|_|_|                                                      
     _|          _|_|_|  _|_|      _|_|        _|          _|_|    _|  _|_|  _|      _|    _|_|    _|  _|_|  
@@ -6,11 +8,15 @@ _|_|_|_|_|  _|                                  _|_|_|
     _|      _|  _|    _|    _|    _|_|_|      _|_|_|      _|_|_|  _|            _|        _|_|_|  _|    
     
     
+____ _  _    ____ ___  ____ ____ ____ _  _ ____ ____ _ ____    ___  ____ ____  _ ____ ____ ___ 
+|__| |\ |    |  | |__] [__  |___ |__/ |  | |___ |__/ | [__     |__] |__/ |  |  | |___ |     |  
+|  | | \|    |__| |__] ___] |___ |  \  \/  |___ |  \ | ___]    |    |  \ |__| _| |___ |___  |  
+    
+```    
 
 
-Welcome to your Node.js project on Cloud9 IDE!
+Welcome to Time Server (an Observeris project)!
 
-This chat example showcases how to use `socket.io` with a static `express` server.
 
 ## Installing all the dependencies
 You need both npm and bower 
@@ -34,7 +40,7 @@ Finally to copy ntp.js from node_modules, since it doesn't have its own bower pa
 
 Once the server is running, open the project in the shape of 'https://projectname-username.c9.io/'. As you enter your name, watch the Users list (on the left) update. Once you press Enter or Send, the message is shared with all connected clients.
 
-## Extra project on top of default chat client.
+## Project on top of default chat client.
 
 1) This is a testbed project for the synchronizer https://github.com/calvinfo/socket-ntp 
 
@@ -53,3 +59,7 @@ Server pseudocode is (see server.js)
 #NOTES
 
 1) Both Client and Server need Socket.io library. The package.json and bower.json should have all the necessary dependencies in.
+
+#References
+
+   * Logo generated at http://bigtext.org/
