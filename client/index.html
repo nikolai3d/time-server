@@ -1,53 +1,59 @@
 <!doctype html>
 <html lang="en" ng-app="timesync">
-  <head>
-    <title>Chat Example</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
-    <style>
-      body {
-        padding-top: 60px;
-      }
-    </style>
 
-  </head>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
+<head>
+  <title>Time Server (An Observeris Project)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+  <style>
+    body {
+      padding-top: 60px;
+    }
+  </style>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/ntp.js"></script>
+</head>
+<script type="text/javascript" src="/bower_components/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="/bower_components/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
+<script type="text/javascript" src="/bower_components/angular-resource/angular-resource.min.js"></script>
+<script type="text/javascript" src="/bower_components/angular-route/angular-route.min.js"></script>
 
-  <body >
-    <div class="tx-out" ng-controller="TimeSyncController as timer">
-      <p>Controller name: {{timer.fTitle}}</p>
-      <p>Controller data: {{timer.fStringData}}</p>
-      <p>Average delta: {{timer.fData.deltaData.fAverageServerNTPDelta}}</p>
-    </div>
- 
+<!-- NTP client-server connector -->
+<script type="text/javascript" src="/bower_components/socket-ntp/ntp.js"></script>
 
-    <script>      
-    
-      // Initialize synchronizer on launch then check every 3 seconds, output into tx-out div at HTML page.
-      
-      var socket = window.io.connect();
-      
-      window.ntp.init(socket);  
+<!-- Core Angular App -->
+<script type="text/javascript" src="/app/app.js"></script>
 
-      //timerTick checks the current offset value. At first the value will be NaN since no communications ran yet.
-        var timerTick = function()
-        {
- 
-          var offset = window.ntp.offset(); // time offset from the server in ms
-          //$("div.tx-out").html(offset+ " ms ");
-          console.log("TICK 1 " + offset);
-          
-          window.setTimeout(timerTick, 3000);
-        }
 
-        timerTick();
-</script>
-  </body>
+<body>
+  <div class="tx-out" ng-controller="TimeSyncController as timer">
+    <p>Controller name: {{timer.fTitle}}</p>
+    <p>Controller data: {{timer.fStringData}}</p>
+    <p>Average delta: {{timer.fData.deltaData.fAverageServerNTPDelta}}</p>
+  </div>
+
+
+  <script>
+    // Initialize synchronizer on launch then check every 3 seconds, output into tx-out div at HTML page.
+
+    var socket = window.io.connect();
+
+    window.ntp.init(socket);
+
+    //timerTick checks the current offset value. At first the value will be NaN since no communications ran yet.
+    var timerTick = function() {
+
+      var offset = window.ntp.offset(); // time offset from the server in ms
+      //$("div.tx-out").html(offset+ " ms ");
+      console.log("TICK 1 " + offset);
+
+      window.setTimeout(timerTick, 3000);
+    }
+
+    timerTick();
+  </script>
+</body>
+
 </html>
