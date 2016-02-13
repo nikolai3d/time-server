@@ -5,46 +5,88 @@
     var app = angular.module('timesync', []);
 
 
-    app.controller("TimeSyncController", ['$http', function($http) {
+    app.controller("TimeSyncController", ['$http', '$interval', '$scope', 
+    function($http, $interval, $scope) {
 
         //Dependency injection: we need an $http service!
-
-        var timeRequest = $http({
-            method: 'GET',
-            url: '/doSynchronize.json'
-        });
-        //Using Angular $http service to make async request to the server.
-
-        //Other way would be:
-        //var gemsPromise = $http.get('/products.json', {apiKey: 'myApiKey'});
-
-        //BOTH return a promise object
-
-        //Since we told $http to fetch JSON, the result will be automatically decoded into 
-        //Javascript objects and arrays
-
         var TC = this; //Extra variable so we can refer to store from the callback.
 
         TC.fServerData = []; //We need to initialize before request so page has something to show while loading.
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
-        
-        timeRequest.then(function(response) {
-                TC.fServerData = response.data;
-                TC.fClientData = {
-                            fSystemTime: null,
-                            fAdjustedSystemTime: null,
-                    };
-                TC.fStringData = JSON.stringify(TC.fServerData);
-            },
-            function(response) {
-                var data = response.data,
-                    status = response.status,
-                    header = response.header,
-                    config = response.config;
-                // error handler
-                alert("JSON Fetch Error!");
+
+        var clientToServerTimeSync = function() {
+
+            var timeRequest = $http({
+                method: 'GET',
+                url: '/doSynchronize.json'
             });
+            //Using Angular $http service to make async request to the server.
+
+            //Other way would be:
+            //var gemsPromise = $http.get('/products.json', {apiKey: 'myApiKey'});
+
+            //BOTH return a promise object
+
+            //Since we told $http to fetch JSON, the result will be automatically decoded into 
+            //Javascript objects and arrays
+
+            timeRequest.then(function(response) {
+                    TC.fServerData = response.data;
+                    TC.fClientData = {
+                        fSystemTime: null,
+                        fAdjustedSystemTime: null,
+                    };
+                    TC.fStringData = JSON.stringify(TC.fServerData);
+                },
+                function(response) {
+                    // var data = response.data,
+                    //     status = response.status,
+                    //     header = response.header,
+                    //     config = response.config;
+                    // error handler
+                    alert("JSON Fetch Error!");
+                });
+
+        };
+
+        //Using $interval: https://docs.angularjs.org/api/ng/service/$interval
+
+
+        var realtimeTimeSync = function() {
+            
+            var clientNow = new Date();
+            TC.fClientData = {
+                fSystemTime: clientNow.getTime(),
+                fMostPreciseTime: clientNow.getTime()
+            };
+
+
+
+        };
+        
+        clientToServerTimeSync();
+        
+        var intervalHandler;
+
+        intervalHandler = $interval(realtimeTimeSync, 10);
+
+        $scope.stopSync = function() {
+            if (angular.isDefined(intervalHandler)) {
+                $interval.cancel(intervalHandler);
+                intervalHandler = undefined;
+            }
+        };
+
+        $scope.$on('$destroy', function() {
+            // Make sure that the interval is destroyed too
+            $scope.stopSync();
+        });
+
+
+
+
+
 
 
     }]);
