@@ -5,13 +5,13 @@ var createTimeServer = function(expressServer) {
         console.log("doSynchronize Request");
 
         var result = {
-            deltaData: keeper.fDeltaData,
-        }
+            fDeltaData: keeper.fDeltaData,
+        };
 
         iResponse.send(JSON.stringify(result));
 
     });
-}
+};
 
 
 module.exports = {
@@ -25,7 +25,10 @@ function Chronos() {
     this.fDeltaData = {
         fLastServerNTPDelta: 0.0,
         fAverageServerNTPDelta: 0.0,
-        fSampleCount: 0.0
+        fSampleCount: 0.0,
+        fServerTime: null, 
+        fServerTimeMS: null,
+        fAdjustedServerTime: null,
     };
 
 
@@ -39,23 +42,31 @@ function Chronos() {
         var ntpClient = require('ntp-client');
 
         ntpClient.getNetworkTime("pool.ntp.org", 123, function(err, date) {
+            
             if (err) {
                 console.error(err);
                 return;
             }
 
 
-            var ntpMilliseconds = date.getMilliseconds();
+            var ntpMilliseconds = date.getTime();
             var serverNow = new Date();
-            var serverMilliseconds = serverNow.getMilliseconds();
+            var serverMilliseconds = serverNow.getTime();
             var serverNTPDelta = serverMilliseconds - ntpMilliseconds;
 
             chronosObject.fDeltaData.fLastServerNTPDelta = serverNTPDelta;
+            
             chronosObject.fTotalDelta += serverNTPDelta;
+            
             chronosObject.fDeltaData.fSampleCount++;
             chronosObject.fDeltaData.fAverageServerNTPDelta = chronosObject.fTotalDelta / chronosObject.fDeltaData.fSampleCount;
-
-
+            
+            chronosObject.fDeltaData.fServerTime = serverNow.toUTCString();
+            chronosObject.fDeltaData.fServerTimeMS = serverNow.getTime();
+ 
+            chronosObject.fDeltaData.fAdjustedServerTime = date.toUTCString();
+            
+            console.log("Current (ServerTime) : " + serverNow.getTime() + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
             //  console.log(date); // Mon Jul 08 2013 21:31:31 GMT+0200 (Paris, Madrid (heure d’été)) 
         });

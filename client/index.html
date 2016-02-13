@@ -31,11 +31,13 @@
   <div class="tx-out" ng-controller="TimeSyncController as timer">
     <p>Controller name: {{timer.fTitle}}</p>
     <p>Controller data: {{timer.fStringData}}</p>
-    <p>Average delta: {{timer.fData.deltaData.fAverageServerNTPDelta}}</p>
-    <p>System Time: {{timer.fSystemTime}}</p>
-    <p>Server Time: {{timer.fServerTime}}</p>
-    <p>Adjusted Server Time: {{timer.fAdjustedServerTime}}</p>
-    <p>Most Precise Local Time: {{timer.fMostPreciseTime}}</p>
+    <p>Average delta: {{timer.fServerData.fDeltaData.fAverageServerNTPDelta}}</p>
+    <p>Server Time: {{timer.fServerData.fDeltaData.fServerTime}}</p>
+    <p>Server Time MS: {{timer.fServerData.fDeltaData.fServerTimeMS}}</p>
+    <p>Adjusted Server Time: {{timer.fServerData.fDeltaData.fAdjustedServerTime}}</p>
+    
+    <p>Local Time: {{timer.fClientData.fSystemTime}}</p>
+    <p>Most Precise Local Time: {{timer.fClientData.fMostPreciseTime}}</p>
    
   </div>
 

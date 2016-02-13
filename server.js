@@ -43,7 +43,7 @@ io.on('connection', function(socket) {
     var text = String(msg || '');
 
     if (!text)
-      return;
+      return; 
 
     socket.get('name', function(err, name) {
       var data = {

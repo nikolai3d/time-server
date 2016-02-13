@@ -25,13 +25,17 @@
 
         var TC = this; //Extra variable so we can refer to store from the callback.
 
-        TC.data = []; //We need to initialize before request so page has something to show while loading.
+        TC.fServerData = []; //We need to initialize before request so page has something to show while loading.
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
         
         timeRequest.then(function(response) {
-                TC.fData = response.data;
-                TC.fStringData = JSON.stringify(TC.fData);
+                TC.fServerData = response.data;
+                TC.fClientData = {
+                            fSystemTime: null,
+                            fAdjustedSystemTime: null,
+                    };
+                TC.fStringData = JSON.stringify(TC.fServerData);
             },
             function(response) {
                 var data = response.data,
