@@ -10,15 +10,15 @@
   "license": "MIT",
   "author": "Nikolai Svakhin <svakhine@adobe.com> (https://twitter.com/Nikolai3d)",
   "dependencies": {
-    "async": "^1.5.2",
-    "express": "^4.13.4",
+    "async": "~0.2.8",
+    "express": "~3.2.4",
     "ntp-client": "^0.5.3",
     "socket-ntp": "^0.1.0",
-    "socket.io": "^1.4.5"
+    "socket.io": "~0.9.14"
   },
   "devDependencies": {
     "bower": "^1.7.7",
-    "gulp": "^3.9.1",
-    "gulp-util": "^3.0.7"
+    "grunt": "^0.4.5",
+    "gulp": "^3.9.1"
   }
 }
