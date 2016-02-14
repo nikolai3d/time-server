@@ -35,11 +35,11 @@
     <p>Server Time: {{timer.fServerData.fDeltaData.fServerTime}}</p>
     <p>Server Time MS: {{timer.fServerData.fDeltaData.fServerTimeMS}}</p>
     <p>Adjusted Server Time: {{timer.fServerData.fDeltaData.fAdjustedServerTime}}</p>
-    
+
     <p>Local Time: {{timer.fClientData.fSystemTime}}</p>
     <p>Most Precise Local Time: {{timer.fClientData.fMostPreciseTime}}</p>
-    <p>Socket NTP offset: {{timer.fSocketNTPData.fAverageOffset}} ms</p>
-    <p>Socket NTP latency: {{timer.fSocketNTPData.fAverageLatency}} ms</p>
+    <p>Socket NTP offset: {{timer.fSocketNTPData.fAverageOffset}} ms ({{timer.fSocketNTPData.fNumberOfSamples}} samples)</p>
+    <p>Socket NTP latency: {{timer.fSocketNTPData.fAverageLatency}} ms ({{timer.fSocketNTPData.fNumberOfSamples}} samples)</p>
   </div>
 
 </body>
