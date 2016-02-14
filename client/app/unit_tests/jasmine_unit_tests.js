@@ -1,11 +1,19 @@
 /* global expect */
 /* global angular */
 
-describe('Synchronizer', function() { //describe specifies a "spec" : logical grouping of tests
-    it('Angular Available', function(){
+
+describe('Angular Availability', function() { //describe specifies a "spec" : logical grouping of tests
+        it('Angular Available', function(){
         var angularCheck = (typeof(angular) != "undefined");
         expect(angularCheck).toBe(true);
     });
+        it('Angular Mock Available', function(){
+        var angularMockCheck = (typeof(angular.mock) != "undefined");
+        expect(angularMockCheck).toBe(true);
+    });
+});
+
+describe('Synchronizer', function() { //describe specifies a "spec" : logical grouping of tests
 
     //beforeEach(angular.mock.module('calculatorApp'));
 
