@@ -29,7 +29,7 @@ Finally, to copy  `socket.io.js` from node_modules, (since `socket.io` bower doe
 
     $ gulp copy-js
 
-## Running the server
+## Running the project
 
 1) Open `server.js` and start the app by clicking on the "Run" button in the top menu.
 
@@ -39,25 +39,22 @@ Finally, to copy  `socket.io.js` from node_modules, (since `socket.io` bower doe
 
 Once the server is running, open the project in the shape of 'https://projectname-username.c9.io/'. As you enter your name, watch the Users list (on the left) update. Once you press Enter or Send, the message is shared with all connected clients.
 
-## Project on top of default chat client.
+## Project description
 
-1) This is a testbed project for the synchronizer https://github.com/calvinfo/socket-ntp 
+### Browser-server NTP synchronization
 
-2) Synchronizer client side is bower_components/socket-ntp/ntp.js
+1) Synchronizer client side is implemented from scratch, referenced by the `socket-ntp/ntp.js`. All the implementation is 
+now encapsulated in `client/app/services/socket-ntp-sync.js`
 
-Client pseudocode (see index.html, powered by socket.io)
- - Initialize synchronizer on launch then check every 3 seconds, output into tx-out div at HTML page.
- - timerTick checks the current offset value. At first the value will be NaN since no communications ran yet.
+2) Synchronizer server side is node-modules/socket-ntp, installed via "npm install socket-ntp" 
+(https://github.com/calvinfo/socket-ntp ), see the package.json dependencies. All the implementation is in `server.js`
 
-3)Synchronizer server side is node-modules/socket-ntp, installed via "npm install socket-ntp"
+3) Both Client and Server need Socket.io (http://socket.io/) library installed. 
 
-Server pseudocode is (see server.js)
+### Server-NTP.ORG synchronization
 
- - set up a callback: on an incoming socket, do ntp.sync(socket);
+Server-NTP.ORG synchronization is implemented in `timeServer.js`, powered by `ntp-client` NodeJS module: https://github.com/moonpyk/node-ntp-client 
 
-#NOTES
-
-1) Both Client and Server need Socket.io library. The package.json and bower.json should have all the necessary dependencies in.
 
 #References
 
