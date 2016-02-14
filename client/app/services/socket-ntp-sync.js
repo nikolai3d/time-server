@@ -4,6 +4,7 @@ gApp.factory('SocketNTPSync', ['$window', '$rootScope', '$interval',
     function($window, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
+        
         var socket = $window.io.connect();
 
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
@@ -55,7 +56,6 @@ gApp.factory('SocketNTPSync', ['$window', '$rootScope', '$interval',
                 for (var i = 0; i < theNTP.fPingSamples.length; i++) {
                     averageOffset += theNTP.fPingSamples[i].fOffset;
                     averageLatency += theNTP.fPingSamples[i].fLatency;
-
                 }
 
                 averageOffset /= theNTP.fPingSamples.length;
