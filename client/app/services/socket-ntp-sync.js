@@ -1,7 +1,7 @@
 /* global gApp */
-
-gApp.factory('SocketNTPSync', ['$window',
-    function($window) {
+/* global angular */
+gApp.factory('SocketNTPSync', ['$window','$rootScope','$interval',
+    function($window, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
         var socket = $window.io.connect();
@@ -9,44 +9,75 @@ gApp.factory('SocketNTPSync', ['$window',
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
 
-        var NTP = function(sock) {
+        var NTP = function(iSocket) {
 
             var theNTP = this;
-            var sync = function() {
+            var sendNTPPing = function() {
                 theNTP.fSocket.emit('ntp:client_sync', {
                     t0: Date.now()
                 });
             };
 
-            var onSync = function(data) {
+            var onReceiveNTPPing = function(data) {
 
-                var diff = Date.now() - data.t1 + ((Date.now() - data.t0) / 2);
+                var nowTime = Date.now();
+                var latency = nowTime - data.t0;
+                var diff = nowTime - data.t1 + (latency * 0.5);
 
-                theNTP.offsets.unshift(diff);
 
-                if (theNTP.offsets.length > 10)
-                    theNTP.offsets.pop();
+                var pingSample = {
+                    fOffset: diff,
+                    fLatency: latency
+                };
+                theNTP.fPingSamples.unshift(pingSample);
+
+                if (theNTP.fPingSamples.length > 10)
+                    theNTP.fPingSamples.pop();
             };
 
 
-            this.offset = function() {
+            this.offsetLatency = function() {
 
-                if (theNTP.offsets.length == 0) {
+                if (theNTP.fPingSamples.length == 0) {
                     return null;
                 }
-                var sum = 0;
-                for (var i = 0; i < theNTP.offsets.length; i++)
-                    sum += theNTP.offsets[i];
+                
+                var averageOffset = 0.0;
+                var averageLatency = 0.0;
+                
+                for (var i = 0; i < theNTP.fPingSamples.length; i++) {
+                    averageOffset += theNTP.fPingSamples[i].fOffset;
+                    averageLatency += theNTP.fPingSamples[i].fLatency;
+                    
+                }
 
-                sum /= theNTP.offsets.length;
-
-                return sum;
+                averageOffset /= theNTP.fPingSamples.length;
+                averageLatency /= theNTP.fPingSamples.length;
+                
+                return {
+                    fAverageOffset: averageOffset,
+                    fAverageLatency: averageLatency
+                };
             };
 
-            this.offsets = [];
-            this.fSocket = sock;
-            this.fSocket.on('ntp:server_sync', onSync);
-            setInterval(sync, 1000);
+            this.fPingSamples = [];
+            this.fSocket = iSocket;
+            this.fSocket.on('ntp:server_sync', onReceiveNTPPing);
+
+            var intervalHandler = $interval(sendNTPPing, 1000);
+
+            $rootScope.stopNTPPings = function() {
+                if (angular.isDefined(intervalHandler)) {
+                    $interval.cancel(intervalHandler);
+                    intervalHandler = undefined;
+                }
+            };
+
+            $rootScope.$on('$destroy', function() {
+                // Make sure that the interval is destroyed too
+                $rootScope.stopNTPPings();
+            });
+
 
         };
 
@@ -58,8 +89,8 @@ gApp.factory('SocketNTPSync', ['$window',
         var ntp = new NTP(socket);
 
         var myNTPSync = {
-            GetOffset: function() {
-                return ntp.offset();
+            GetOffsetAndLatency: function() {
+                return ntp.offsetLatency();
             }
         };
 

@@ -62,7 +62,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
             };
 
 
-            TC.fSocketNTPData = SocketNTPSync.GetOffset();
+            TC.fSocketNTPData = SocketNTPSync.GetOffsetAndLatency();
             if (TC.fSocketNTPData === null) {
                 TC.fSocketNTPData = "No Data Yet";
             }
