@@ -55,6 +55,9 @@ now encapsulated in `client/app/services/socket-ntp-sync.js`
 
 Server-NTP.ORG synchronization is implemented in `timeServer.js`, powered by `ntp-client` NodeJS module: https://github.com/moonpyk/node-ntp-client 
 
+## Unit Testing
+
+Starting to write unit tests based on this tutorial: http://www.bradoncode.com/tutorials/angularjs-unit-testing/ 
 
 #References
 
