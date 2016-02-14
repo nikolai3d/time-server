@@ -2,10 +2,10 @@
 
 //(function() { //We no longer have the anon enclosure, since we need a gApp reference is socket-ntp-sync.js file.
 
-    var gApp = angular.module('timesync', []);
+var gApp = angular.module('timesync', []);
 
 
-    gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync',
+gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync',
     function($http, $interval, $scope, SocketNTPSync) {
 
         //Dependency injection: we need an $http service!
@@ -54,21 +54,23 @@
 
 
         var realtimeTimeSync = function() {
-            
+
             var clientNow = new Date();
             TC.fClientData = {
                 fSystemTime: clientNow.getTime(),
                 fMostPreciseTime: clientNow.getTime()
             };
 
-            
-           // TC.fSocketNTPData = window.ntp.offset();
-             TC.fSocketNTPData = SocketNTPSync.GetOffset();
+
+            TC.fSocketNTPData = SocketNTPSync.GetOffset();
+            if (TC.fSocketNTPData === null) {
+                TC.fSocketNTPData = "No Data Yet";
+            }
 
         };
-        
+
         clientToServerTimeSync();
-        
+
         var intervalHandler;
 
         intervalHandler = $interval(realtimeTimeSync, 10);
@@ -91,5 +93,6 @@
 
 
 
-    }]);
+    }
+]);
 //})();
