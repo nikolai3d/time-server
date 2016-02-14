@@ -8,51 +8,54 @@ gApp.factory('SocketNTPSync', ['$window',
 
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
-        var ntp = {},
-            offsets = [],
-            fSocket;
 
-        ntp.init = function(sock) {
+        var NTP = function(sock) {
 
-            fSocket = sock;
-            fSocket.on('ntp:server_sync', onSync);
-            setInterval(sync, 1000);
-        };
+            var theNTP = this;
+            var sync = function() {
+                theNTP.fSocket.emit('ntp:client_sync', {
+                    t0: Date.now()
+                });
+            };
 
-        var sync = function() {
-            socket.emit('ntp:client_sync', {
-                t0: Date.now()
-            });
-        };
+            var onSync = function(data) {
 
+                var diff = Date.now() - data.t1 + ((Date.now() - data.t0) / 2);
 
-        var onSync = function(data) {
+                theNTP.offsets.unshift(diff);
 
-            var diff = Date.now() - data.t1 + ((Date.now() - data.t0) / 2);
-
-            offsets.unshift(diff);
-
-            if (offsets.length > 10)
-                offsets.pop();
-        };
+                if (theNTP.offsets.length > 10)
+                    theNTP.offsets.pop();
+            };
 
 
-        ntp.offset = function() {
-            
-            if (offsets.length == 0)
-                {
-                return null;
+            this.offset = function() {
+
+                if (theNTP.offsets.length == 0) {
+                    return null;
                 }
-            var sum = 0;
-            for (var i = 0; i < offsets.length; i++)
-                sum += offsets[i];
+                var sum = 0;
+                for (var i = 0; i < theNTP.offsets.length; i++)
+                    sum += theNTP.offsets[i];
 
-            sum /= offsets.length;
+                sum /= theNTP.offsets.length;
 
-            return sum;
+                return sum;
+            };
+
+            this.offsets = [];
+            this.fSocket = sock;
+            this.fSocket.on('ntp:server_sync', onSync);
+            setInterval(sync, 1000);
+
         };
 
-        ntp.init(socket);
+
+
+
+
+
+        var ntp = new NTP(socket);
 
         var myNTPSync = {
             GetOffset: function() {
