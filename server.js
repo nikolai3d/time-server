@@ -20,7 +20,9 @@ var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
 
-router.use(express.static(path.resolve(__dirname, 'client')));
+
+var htmlRootPath = path.resolve(__dirname, 'client');
+router.use(express.static(htmlRootPath));
 
 
 
