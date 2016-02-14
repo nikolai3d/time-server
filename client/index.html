@@ -43,26 +43,6 @@
     <p>Socket NTP offset: {{timer.fSocketNTPData}}</p>
   </div>
 
-
-  <script>
-    // Initialize synchronizer on launch then check every 3 seconds, output into tx-out div at HTML page.
-
-    var socket = window.io.connect();
-
-    window.ntp.init(socket);
-
-    //timerTick checks the current offset value. At first the value will be NaN since no communications ran yet.
-    var timerTick = function() {
-
-      var offset = window.ntp.offset(); // time offset from the server in ms
-      //$("div.tx-out").html(offset+ " ms ");
-      //console.log("TICK 1 " + offset);
-
-      window.setTimeout(timerTick, 3000);
-    }
-
-    timerTick();
-  </script>
 </body>
 
 </html>

@@ -1,14 +1,18 @@
 /* global gApp */
 
-gApp.factory('SocketNTPSync', ['$rootScope',
-    function($rootScope){
-    
-    
-    
-    var myNTPSync = {
+gApp.factory('SocketNTPSync', ['$window',
+    function($window) {
+
+        var socket = $window.io.connect();
+
+        $window.ntp.init(socket);
+
+        var myNTPSync = {
             GetOffset: function() {
-                return window.ntp.offset();
+                return $window.ntp.offset();
             }
-    };
-    return myNTPSync;
-    }]);
+        };
+        
+        return myNTPSync;
+    }
+]);
