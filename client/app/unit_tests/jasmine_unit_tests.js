@@ -57,6 +57,24 @@ describe('Synchronizer', function() { //describe specifies a "spec" : logical gr
 
     }); // it specifies a single test within a spec
 
+    it('Controller establishes heartbeat', function() {
+    
+    var $intervalSpy = jasmine.createSpy('$interval', $interval);
+
+        var tsController = $controller('TimeSyncController', {
+            $http: $http,
+            $interval: $intervalSpy,
+            $scope: $scope,
+            SocketNTPSync: SocketNTPSync
+        });
+
+
+    expect($intervalSpy).toHaveBeenCalled();
+
+        
+    });
+
+
     //Other matchers (trutherizers)
 
     // expect(true).toBe(true);
