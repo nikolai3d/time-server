@@ -7,6 +7,9 @@ var gApp = angular.module('timesync', ['btford.socket-io']);
 gApp.factory('BtfordSocket', function (socketFactory) {
     //socketFactory is a btford.socket-io socket creator
     //NOTE: needs ("bower_components/socket.io/socket.io.js" dependency)
+
+    //For Unit tests, mock socket-io implementation will come from
+    //"bower_components/angular-socket.io-mock/angular-socket.io-mock.js"
   return socketFactory();
 });
 
