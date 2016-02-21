@@ -4,17 +4,17 @@ gApp.factory('SocketNTPSync', ['$window', '$rootScope', '$interval',
     function($window, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
-        
+
         var socket = $window.io.connect();
 
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
 
         var NTP = function(iSocket) {
-            
+
             var kMaxSampleCount = 20;
             var kSampleDelayMS = 1000;
-            
+
             var theNTP = this;
             var sendNTPPing = function() {
                 theNTP.fSocket.emit('ntp:client_sync', {
@@ -88,11 +88,6 @@ gApp.factory('SocketNTPSync', ['$window', '$rootScope', '$interval',
 
 
         };
-
-
-
-
-
 
         var ntp = new NTP(socket);
 
