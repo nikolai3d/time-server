@@ -1,11 +1,13 @@
 /* global gApp */
 /* global angular */
-gApp.factory('SocketNTPSync', ['$window', '$rootScope', '$interval',
-    function($window, $rootScope, $interval) {
+
+
+gApp.factory('SocketNTPSync', ['mySocket', '$rootScope', '$interval',
+    function(mySocket, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
 
-        var socket = $window.io.connect();
+        var socket = mySocket;// $window.io.connect();
 
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
