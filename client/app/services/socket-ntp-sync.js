@@ -1,13 +1,16 @@
 /* global gApp */
 /* global angular */
 
+//'BtfordSocket' is the socket produced by https://github.com/btford/angular-socket-io //("bower_components/angular-socket-io/socket.min.js" dependency)
+//windowIOSocket is the socket produced by window.io.connect
+// ("bower_components/socket.io/socket.io.js" dependency)
 
-gApp.factory('SocketNTPSync', ['mySocket', '$rootScope', '$interval',
+gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
     function(mySocket, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
 
-        var socket = mySocket;// $window.io.connect();
+        var socket = mySocket;
 
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side

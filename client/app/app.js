@@ -4,8 +4,17 @@
 
 var gApp = angular.module('timesync', ['btford.socket-io']);
 
-gApp.factory('mySocket', function (socketFactory) {
+gApp.factory('BtfordSocket', function (socketFactory) {
+    //socketFactory is a btford.socket-io socket creator
+    //NOTE: needs ("bower_components/socket.io/socket.io.js" dependency)
   return socketFactory();
 });
+
+//Just wrapping $window.io socket in an Angular Service
+//An option just for the heck of it.
+//NOTE: needs ("bower_components/socket.io/socket.io.js" dependency)
+gApp.factory('windowIOSocket',['$window', function (iWindow) {
+  return iWindow.io.connect();
+}]);
 
 //})();
