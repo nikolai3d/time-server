@@ -38,6 +38,7 @@ describe('Component Availability', function() { //describe specifies a "spec" : 
 
         var operatingScope;
 
+
         angular.mock.inject(function (_SocketNTPSync_, _$controller_, _$http_, _$interval_, _$rootScope_) {
             instanceOfSocketNTPSyncService = _SocketNTPSync_;
             controllerService = _$controller_;
@@ -68,16 +69,45 @@ describe('TimeSyncController', function() { //describe specifies a "spec" : logi
     var $interval;
     var $http;
     var SocketNTPSync;
+    var $httpBackend;
 
-    beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$interval_, _$http_) {
+    beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$interval_, _$http_, _$httpBackend_, _SocketNTPSync_) {
         $controller = _$controller_;
         $scope = _$rootScope_.$new();
         $interval = _$interval_;
         $http = _$http_;
-
+        $httpBackend = _$httpBackend_;
+        SocketNTPSync = _SocketNTPSync_;
     }));
 
+    afterEach(function () {
 
+    //This verifies that all calls came through.
+    $httpBackend.verifyNoOutstandingExpectation();
+    $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
+});
+
+
+    it('TimeSyncController Attempts A Sync with Server', function () {
+
+        var tsController = $controller('TimeSyncController', {
+            $http: $http,
+            $interval: $interval,
+            $scope: $scope,
+            SocketNTPSync: SocketNTPSync
+        });
+
+        var urlValidator = function (url) {
+                    //dump(url);
+                    return url === '/doSynchronize.json';
+
+                };
+
+        $httpBackend.expectGET(urlValidator).respond(200);
+
+        expect($httpBackend.flush).not.toThrow(); //Another check
+
+    });
 
 
     // it('Controller is there', function() {

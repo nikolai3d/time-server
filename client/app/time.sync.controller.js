@@ -1,5 +1,5 @@
 gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync',
-    function($http, $interval, $scope, SocketNTPSync) {
+    function ($http, $interval, $scope, SocketNTPSync) {
 
         //Dependency injection: we need an $http service!
         var TC = this; //Extra variable so we can refer to store from the callback.
@@ -8,7 +8,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
 
-        var clientToServerTimeSync = function() {
+        var clientToServerTimeSync = function () {
 
             var timeRequest = $http({
                 method: 'GET',
@@ -24,7 +24,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
             //Since we told $http to fetch JSON, the result will be automatically decoded into
             //Javascript objects and arrays
 
-            timeRequest.then(function(response) {
+            timeRequest.then(function (response) {
                     TC.fServerData = response.data;
                     TC.fClientData = {
                         fSystemTime: null,
@@ -32,7 +32,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
                     };
                     TC.fStringData = JSON.stringify(TC.fServerData);
                 },
-                function(response) {
+                function (response) {
                     // var data = response.data,
                     //     status = response.status,
                     //     header = response.header,
@@ -46,7 +46,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         //Using $interval: https://docs.angularjs.org/api/ng/service/$interval
 
 
-        var realtimeTimeSync = function() {
+        var realtimeTimeSync = function () {
 
             var clientNow = new Date();
             TC.fClientData = {
@@ -72,14 +72,14 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
 
         intervalHandler = $interval(realtimeTimeSync, 10);
 
-        $scope.stopSync = function() {
+        $scope.stopSync = function () {
             if (angular.isDefined(intervalHandler)) {
                 $interval.cancel(intervalHandler);
                 intervalHandler = undefined;
             }
         };
 
-        $scope.$on('$destroy', function() {
+        $scope.$on('$destroy', function () {
             // Make sure that the interval is destroyed too
             $scope.stopSync();
         });
