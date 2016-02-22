@@ -3,18 +3,18 @@
 /* global jasmine */
 
 
-describe('Angular Availability', function() { //describe specifies a "spec" : logical grouping of tests
-    it('Angular Available', function() {
-        var angularCheck = (typeof(angular) != "undefined");
+describe('Angular Availability', function () { //describe specifies a "spec" : logical grouping of tests
+    it('Angular Available', function () {
+        var angularCheck = (typeof (angular) != "undefined");
         expect(angularCheck).toBe(true);
     });
-    it('Angular Mock Available', function() {
-        var angularMockCheck = (typeof(angular.mock) != "undefined");
+    it('Angular Mock Available', function () {
+        var angularMockCheck = (typeof (angular.mock) != "undefined");
         expect(angularMockCheck).toBe(true);
     });
 });
 
-describe('Component Availability', function() { //describe specifies a "spec" : logical grouping of tests
+describe('Component Availability', function () { //describe specifies a "spec" : logical grouping of tests
 
     beforeEach(angular.mock.module('timesync'));
 
@@ -28,7 +28,7 @@ describe('Component Availability', function() { //describe specifies a "spec" : 
         expect(instanceOfSocketNTPSyncService).toBeDefined();
     });
 
-    it('TimeSyncController is Available', function() {
+    it('TimeSyncController is Available', function () {
 
         var instanceOfSocketNTPSyncService;
         var controllerService;
@@ -60,7 +60,7 @@ describe('Component Availability', function() { //describe specifies a "spec" : 
     });
 });
 
-describe('TimeSyncController', function() { //describe specifies a "spec" : logical grouping of tests
+describe('TimeSyncController', function () { //describe specifies a "spec" : logical grouping of tests
 
     beforeEach(angular.mock.module('timesync'));
 
@@ -71,7 +71,7 @@ describe('TimeSyncController', function() { //describe specifies a "spec" : logi
     var SocketNTPSync;
     var $httpBackend;
 
-    beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$interval_, _$http_, _$httpBackend_, _SocketNTPSync_) {
+    beforeEach(angular.mock.inject(function (_$controller_, _$rootScope_, _$interval_, _$http_, _$httpBackend_, _SocketNTPSync_) {
         $controller = _$controller_;
         $scope = _$rootScope_.$new();
         $interval = _$interval_;
@@ -82,10 +82,10 @@ describe('TimeSyncController', function() { //describe specifies a "spec" : logi
 
     afterEach(function () {
 
-    //This verifies that all calls came through.
-    $httpBackend.verifyNoOutstandingExpectation();
-    $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
-});
+        //This verifies that all calls came through.
+        $httpBackend.verifyNoOutstandingExpectation();
+        $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
+    });
 
 
     it('TimeSyncController Attempts A Sync with Server', function () {
@@ -98,10 +98,10 @@ describe('TimeSyncController', function() { //describe specifies a "spec" : logi
         });
 
         var urlValidator = function (url) {
-                    //dump(url);
-                    return url === '/doSynchronize.json';
+            //dump(url);
+            return url === '/doSynchronize.json';
 
-                };
+        };
 
         $httpBackend.expectGET(urlValidator).respond(200);
 
