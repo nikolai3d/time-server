@@ -214,57 +214,10 @@ describe('TimeSyncController Empty Server Communication', function () {
         console.log(tsController.fRealTimeSyncCount);
         expect(tsController.fRealTimeSyncCount).toEqual(500);
     });
+});
 
-    // it('Controller is there', function() {
-    //
-    //     //var $intervalSpy = jasmine.createSpy('$interval', $interval);
-    //
-    //     var tsController = $controller('TimeSyncController', {
-    //         $http: $http,
-    //         $interval: $interval,
-    //         $scope: $scope,
-    //         SocketNTPSync: SocketNTPSync
-    //     });
-    //
-    //     expect(tsController.fTitle).toEqual('UberTimeSync');
-    //
-    // }); // it specifies a single test within a spec
-    //
-    // it('Controller establishes heartbeat at > 30 fps', function() {
-    //
-    //     //This references stuff in http://www.bradoncode.com/blog/2015/06/15/unit-testing-interval-angularls/
-    //
-    //     var $intervalSpy = jasmine.createSpy('$interval', $interval);
-    //
-    //     var tsController = $controller('TimeSyncController', {
-    //         $http: $http,
-    //         $interval: $intervalSpy,
-    //         $scope: $scope,
-    //         SocketNTPSync: SocketNTPSync
-    //     });
-    //
-    //     expect(tsController.fTitle).toEqual('UberTimeSync');
-    //
-    //     expect($intervalSpy).toHaveBeenCalled();
-    //
-    //     var calls = $intervalSpy.calls.all();
-    //     var args0 = calls[0].args;
-    //
-    //     var heartbeatAtLeast30fps = args0[1] < 1000.0 / 30.0; //Second argument is milliseconds delay
-    //     //For interval to fire with at least 30 fps, delay needs to be less
-    //     //than 1000/30
-    //
-    //     expect(heartbeatAtLeast30fps).toBe(true);
-    //
-    // });
+describe('TimeSyncController Initial Server Synchronization', function () {
+var sampleServerResponse= {"fDeltaData":{"fLastServerNTPDelta":1369,"fAverageServerNTPDelta":1362.0383631713555,"fSampleCount":782,"fServerTime":"Tue, 23 Feb 2016 05:39:10 GMT","fServerTimeMS":1456205950959,"fAdjustedServerTime":"Tue, 23 Feb 2016 05:39:09 GMT"}};
 
-
-    //Other matchers (trutherizers)
-
-    // expect(true).toBe(true);
-    // expect(false).not.toBe(true);
-    // expect(1).toEqual(1);
-    // expect('foo').toEqual('foo');
-    // expect('foo').not.toEqual('bar');
 
 });
