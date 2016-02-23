@@ -70,9 +70,12 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
     var $http;
     var SocketNTPSync;
     var $httpBackend;
+    var injectedRootScope;
+
 
     beforeEach(angular.mock.inject(function (_$controller_, _$rootScope_, _$interval_, _$http_, _$httpBackend_, _SocketNTPSync_) {
         $controller = _$controller_;
+        injectedRootScope = _$rootScope_;
         $scope = _$rootScope_.$new();
         $interval = _$interval_;
         $http = _$http_;
@@ -90,8 +93,15 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
     var MockClockService = {
         Now: function () {
 
+            var clientNow = new Date();
+            return clientNow.getTime();
+        }
+    };
+
+    var FrozenClockService = {
+        Now: function () {
+
             var frozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
-            //var clientNow = new Date();
             return frozenTime.getTime();
         }
     };
@@ -113,6 +123,50 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
         };
 
         $httpBackend.expectGET(urlValidator).respond(200);
+
+        expect($httpBackend.flush).not.toThrow(); //Another check
+
+    });
+
+    it('TimeSyncController Local Time Sampling In Order, Frozen Time', function () {
+
+        var tsController = $controller('TimeSyncController', {
+            $http: $http,
+            $interval: $interval,
+            $scope: $scope,
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: FrozenClockService
+        });
+
+
+        var urlValidator = function (url) {
+            return url === '/doSynchronize.json';
+        };
+
+        $httpBackend.expectGET(urlValidator).respond(200);
+
+        //Client Data is initialized with null
+        expect(tsController.fClientData).toBeDefined();
+        expect(tsController.fClientData).toBe(null);
+        //And Server Data is Empty
+        expect(tsController.fServerData).toBeDefined();
+        expect(tsController.fServerData).toEqual([]);
+
+        $interval.flush(5000);
+        //After 5 seconds, the clientData should not be NULL since some local time sampling did occur
+        //Since we are using FrozenClockService, the time should stand still.
+
+        var sampleFrozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
+        expect(tsController.fClientData).not.toBe(null);
+        expect(tsController.fClientData.fSystemTime).toBeDefined();
+        expect(tsController.fClientData.fSystemTime).not.toBe(null);
+        expect(tsController.fClientData.fSystemTime).toEqual(sampleFrozenTime.getTime());
+
+
+        //However, since we are not flushing backend here, fServerData is still the same, empty
+        expect(tsController.fServerData).toBeDefined();
+        expect(tsController.fServerData).toEqual([]);
+
 
         expect($httpBackend.flush).not.toThrow(); //Another check
 

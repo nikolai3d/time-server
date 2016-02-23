@@ -7,6 +7,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         TC.fServerData = []; //We need to initialize before request so page has something to show while loading.
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
+        TC.fClientData = null;
 
         var clientToServerTimeSync = function () {
 
@@ -49,7 +50,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         var realtimeTimeSync = function () {
 
             var clientNow = iClockService.Now();
-            
+
             TC.fClientData = {
                 fSystemTime: clientNow,
                 fMostPreciseTime: clientNow
