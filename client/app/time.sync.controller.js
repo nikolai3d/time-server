@@ -8,6 +8,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         TC.fTitle = "UberTimeSync";
         TC.fStringData = "No Data";
         TC.fClientData = null;
+        TC.fRealTimeSyncCount = 0;
 
         var clientToServerTimeSync = function () {
 
@@ -65,6 +66,8 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
                     fNumberOfSamples: 0
                 };
             }
+
+            TC.fRealTimeSyncCount++;
 
         };
 

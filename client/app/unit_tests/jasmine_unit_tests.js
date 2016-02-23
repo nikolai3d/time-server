@@ -162,6 +162,58 @@ describe('TimeSyncController Empty Server Communication', function () {
 
     });
 
+    it('TimeSyncController Interval Argument Check', function () {
+
+        var $intervalSpy = jasmine.createSpy('$interval', $interval);
+
+        expect($intervalSpy).not.toHaveBeenCalled();
+
+
+        var tsController = $controller('TimeSyncController', {
+            $http: $http,
+            $interval: $intervalSpy,
+            $scope: $scope,
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: FrozenClockService
+        });
+
+        expect($intervalSpy).toHaveBeenCalled();
+
+        //Client Data is initialized with null
+        expect(tsController.fClientData).toBeDefined();
+        expect(tsController.fClientData).toBe(null);
+        //And Server Data is Empty
+        expect(tsController.fServerData).toBeDefined();
+        expect(tsController.fServerData).toEqual([]);
+
+        //
+        var calls = $intervalSpy.calls.all();
+        var args0 = calls[0].args;
+
+        //
+        var heardBeatDelay = args0[1] ; //Second argument is milliseconds delay
+        //For interval to fire with at least 30 fps, delay needs to be less
+        //than 1000/30
+
+        expect(heardBeatDelay).toEqual(10);
+
+    });
+
+    it('TimeSyncController Interval Count Check', function () {
+
+        var tsController = $controller('TimeSyncController', {
+            $http: $http,
+            $interval: $interval,
+            $scope: $scope,
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: FrozenClockService
+        });
+        //injectedRootScope.$apply();
+        $interval.flush(5000);
+
+        console.log(tsController.fRealTimeSyncCount);
+        expect(tsController.fRealTimeSyncCount).toEqual(500);
+    });
 
     // it('Controller is there', function() {
     //
