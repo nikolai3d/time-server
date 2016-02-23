@@ -87,6 +87,14 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
         $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
     });
 
+    var MockClockService = {
+        Now: function () {
+
+            var frozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
+            //var clientNow = new Date();
+            return frozenTime.getTime();
+        }
+    };
 
     it('TimeSyncController Attempts A Sync with Server', function () {
 
@@ -94,7 +102,8 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
             $http: $http,
             $interval: $interval,
             $scope: $scope,
-            SocketNTPSync: SocketNTPSync
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: MockClockService
         });
 
         var urlValidator = function (url) {

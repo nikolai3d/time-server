@@ -10,14 +10,24 @@ gApp.factory('BtfordSocket', function (socketFactory) {
 
     //For Unit tests, mock socket-io implementation will come from
     //"bower_components/angular-socket.io-mock/angular-socket.io-mock.js"
-  return socketFactory();
+    return socketFactory();
 });
 
 //Just wrapping $window.io socket in an Angular Service
 //An option just for the heck of it.
 //NOTE: needs ("bower_components/socket.io/socket.io.js" dependency)
-gApp.factory('windowIOSocket',['$window', function (iWindow) {
-  return iWindow.io.connect();
+gApp.factory('windowIOSocket', ['$window', function (iWindow) {
+    return iWindow.io.connect();
 }]);
 
+
+gApp.factory('LocalClockService', function () {
+    var DefaultLocalClockService = {
+        Now: function () {
+            var clientNow = new Date();
+            return clientNow.getTime();
+        }
+    };
+    return DefaultLocalClockService;
+});
 //})();

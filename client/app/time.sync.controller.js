@@ -1,5 +1,5 @@
-gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync',
-    function ($http, $interval, $scope, SocketNTPSync) {
+gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync', 'LocalClockService',
+    function ($http, $interval, $scope, SocketNTPSync, iClockService) {
 
         //Dependency injection: we need an $http service!
         var TC = this; //Extra variable so we can refer to store from the callback.
@@ -48,10 +48,11 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
 
         var realtimeTimeSync = function () {
 
-            var clientNow = new Date();
+            var clientNow = iClockService.Now();
+            
             TC.fClientData = {
-                fSystemTime: clientNow.getTime(),
-                fMostPreciseTime: clientNow.getTime()
+                fSystemTime: clientNow,
+                fMostPreciseTime: clientNow
             };
 
 
