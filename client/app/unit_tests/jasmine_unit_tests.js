@@ -60,7 +60,8 @@ describe('Component Availability', function () { //describe specifies a "spec" :
     });
 });
 
-describe('TimeSyncController', function () { //describe specifies a "spec" : logical grouping of tests
+describe('TimeSyncController Empty Server Communication', function () {
+    //This tests local time synchronization, the server, when synchronized, does not throw an error, but does not return //anything else either.
 
     beforeEach(angular.mock.module('timesync'));
 
@@ -83,8 +84,17 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
         SocketNTPSync = _SocketNTPSync_;
     }));
 
-    afterEach(function () {
+    beforeEach(function () {
+        var urlValidator = function (url) {
+            return url === '/doSynchronize.json';
+        };
 
+        $httpBackend.expectGET(urlValidator).respond(200);
+    })
+
+
+    afterEach(function () {
+        expect($httpBackend.flush).not.toThrow(); //Another check
         //This verifies that all calls came through.
         $httpBackend.verifyNoOutstandingExpectation();
         $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
@@ -116,16 +126,6 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
             LocalClockService: MockClockService
         });
 
-        var urlValidator = function (url) {
-            //dump(url);
-            return url === '/doSynchronize.json';
-
-        };
-
-        $httpBackend.expectGET(urlValidator).respond(200);
-
-        expect($httpBackend.flush).not.toThrow(); //Another check
-
     });
 
     it('TimeSyncController Local Time Sampling In Order, Frozen Time', function () {
@@ -137,13 +137,6 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
             SocketNTPSync: SocketNTPSync,
             LocalClockService: FrozenClockService
         });
-
-
-        var urlValidator = function (url) {
-            return url === '/doSynchronize.json';
-        };
-
-        $httpBackend.expectGET(urlValidator).respond(200);
 
         //Client Data is initialized with null
         expect(tsController.fClientData).toBeDefined();
@@ -166,9 +159,6 @@ describe('TimeSyncController', function () { //describe specifies a "spec" : log
         //However, since we are not flushing backend here, fServerData is still the same, empty
         expect(tsController.fServerData).toBeDefined();
         expect(tsController.fServerData).toEqual([]);
-
-
-        expect($httpBackend.flush).not.toThrow(); //Another check
 
     });
 
