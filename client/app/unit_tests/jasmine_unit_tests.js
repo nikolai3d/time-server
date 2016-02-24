@@ -60,45 +60,6 @@ describe('Component Availability', function () { //describe specifies a "spec" :
     });
 });
 
-describe('TimeSyncController Empty Server Communication', function () {
-    //This tests local time synchronization, the server, when synchronized, does not throw an error, but does not return //anything else either.
-
-    beforeEach(angular.mock.module('timesync'));
-
-    var $controller;
-    var $scope;
-    var $interval;
-    var $http;
-    var SocketNTPSync;
-    var $httpBackend;
-    var injectedRootScope;
-
-
-    beforeEach(angular.mock.inject(function (_$controller_, _$rootScope_, _$interval_, _$http_, _$httpBackend_, _SocketNTPSync_) {
-        $controller = _$controller_;
-        injectedRootScope = _$rootScope_;
-        $scope = _$rootScope_.$new();
-        $interval = _$interval_;
-        $http = _$http_;
-        $httpBackend = _$httpBackend_;
-        SocketNTPSync = _SocketNTPSync_;
-    }));
-
-    beforeEach(function () {
-        var urlValidator = function (url) {
-            return url === '/doSynchronize.json';
-        };
-
-        $httpBackend.expectGET(urlValidator).respond(200);
-    })
-
-
-    afterEach(function () {
-        expect($httpBackend.flush).not.toThrow(); //Another check
-        //This verifies that all calls came through.
-        $httpBackend.verifyNoOutstandingExpectation();
-        $httpBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
-    });
 
     var MockClockService = {
         Now: function () {
@@ -116,12 +77,61 @@ describe('TimeSyncController Empty Server Communication', function () {
         }
     };
 
+describe('TimeSyncController Empty Server Communication', function () {
+    //This tests local time synchronization, the server, when synchronized, does not throw an error, but does not return //anything else either.
+
+    beforeEach(angular.mock.module('timesync'));
+
+    var injectedControllerService;
+    var localScope;
+    var injectedIntervalService;
+    var injectedHTTP;
+    var SocketNTPSync;
+    var injectedHTTPBackend;
+    var injectedRootScope;
+
+
+    beforeEach(angular.mock.inject(
+        function (_$controller_,
+            _$rootScope_,
+            _$interval_,
+            _$http_,
+            _$httpBackend_,
+            _SocketNTPSync_) {
+
+            injectedControllerService = _$controller_;
+            injectedRootScope = _$rootScope_;
+            localScope = _$rootScope_.$new();
+            injectedIntervalService = _$interval_;
+            injectedHTTP = _$http_;
+            injectedHTTPBackend = _$httpBackend_;
+            SocketNTPSync = _SocketNTPSync_;
+
+        }));
+
+    beforeEach(function () {
+        var urlValidator = function (url) {
+            return url === '/doSynchronize.json';
+        };
+
+        injectedHTTPBackend.expectGET(urlValidator).respond(200);
+    });
+
+
+    afterEach(function () {
+        expect(injectedHTTPBackend.flush).not.toThrow(); //Another check
+        //This verifies that all calls came through.
+        injectedHTTPBackend.verifyNoOutstandingExpectation();
+        injectedHTTPBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
+    });
+
+
     it('TimeSyncController Attempts A Sync with Server', function () {
 
-        var tsController = $controller('TimeSyncController', {
-            $http: $http,
-            $interval: $interval,
-            $scope: $scope,
+        var tsController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
+            $interval: injectedIntervalService,
+            $scope: localScope,
             SocketNTPSync: SocketNTPSync,
             LocalClockService: MockClockService
         });
@@ -130,10 +140,10 @@ describe('TimeSyncController Empty Server Communication', function () {
 
     it('TimeSyncController Local Time Sampling In Order, Frozen Time', function () {
 
-        var tsController = $controller('TimeSyncController', {
-            $http: $http,
-            $interval: $interval,
-            $scope: $scope,
+        var tsController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
+            $interval: injectedIntervalService,
+            $scope: localScope,
             SocketNTPSync: SocketNTPSync,
             LocalClockService: FrozenClockService
         });
@@ -145,7 +155,7 @@ describe('TimeSyncController Empty Server Communication', function () {
         expect(tsController.fServerData).toBeDefined();
         expect(tsController.fServerData).toEqual([]);
 
-        $interval.flush(5000);
+        injectedIntervalService.flush(5000);
         //After 5 seconds, the clientData should not be NULL since some local time sampling did occur
         //Since we are using FrozenClockService, the time should stand still.
 
@@ -164,15 +174,15 @@ describe('TimeSyncController Empty Server Communication', function () {
 
     it('TimeSyncController Interval Argument Check', function () {
 
-        var $intervalSpy = jasmine.createSpy('$interval', $interval);
+        var $intervalSpy = jasmine.createSpy('$interval', injectedIntervalService);
 
         expect($intervalSpy).not.toHaveBeenCalled();
 
 
-        var tsController = $controller('TimeSyncController', {
-            $http: $http,
+        var tsController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
             $interval: $intervalSpy,
-            $scope: $scope,
+            $scope: localScope,
             SocketNTPSync: SocketNTPSync,
             LocalClockService: FrozenClockService
         });
@@ -191,7 +201,7 @@ describe('TimeSyncController Empty Server Communication', function () {
         var args0 = calls[0].args;
 
         //
-        var heardBeatDelay = args0[1] ; //Second argument is milliseconds delay
+        var heardBeatDelay = args0[1]; //Second argument is milliseconds delay
         //For interval to fire with at least 30 fps, delay needs to be less
         //than 1000/30
 
@@ -201,15 +211,15 @@ describe('TimeSyncController Empty Server Communication', function () {
 
     it('TimeSyncController Interval Count Check', function () {
 
-        var tsController = $controller('TimeSyncController', {
-            $http: $http,
-            $interval: $interval,
-            $scope: $scope,
+        var tsController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
+            $interval: injectedIntervalService,
+            $scope: localScope,
             SocketNTPSync: SocketNTPSync,
             LocalClockService: FrozenClockService
         });
         //injectedRootScope.$apply();
-        $interval.flush(5000);
+        injectedIntervalService.flush(5000);
 
         console.log(tsController.fRealTimeSyncCount);
         expect(tsController.fRealTimeSyncCount).toEqual(500);
@@ -217,7 +227,85 @@ describe('TimeSyncController Empty Server Communication', function () {
 });
 
 describe('TimeSyncController Initial Server Synchronization', function () {
-var sampleServerResponse= {"fDeltaData":{"fLastServerNTPDelta":1369,"fAverageServerNTPDelta":1362.0383631713555,"fSampleCount":782,"fServerTime":"Tue, 23 Feb 2016 05:39:10 GMT","fServerTimeMS":1456205950959,"fAdjustedServerTime":"Tue, 23 Feb 2016 05:39:09 GMT"}};
+    var sampleServerResponse = {
+        "fDeltaData": {
+            "fLastServerNTPDelta": 15,
+            "fAverageServerNTPDelta": 15.333333333333334,
+            "fSampleCount": 3,
+            "fServerTimeMS": 1456284825334
+        }
+    };
 
+    beforeEach(angular.mock.module('timesync'));
+
+    var injectedControllerService;
+    var localScope;
+    var injectedIntervalService;
+    var injectedHTTP;
+    var SocketNTPSync;
+    var injectedHTTPBackend;
+    var injectedRootScope;
+
+    var timeSyncController;
+
+    beforeEach(angular.mock.inject(
+        function (_$controller_,
+            _$rootScope_,
+            _$interval_,
+            _$http_,
+            _$httpBackend_,
+            _SocketNTPSync_) {
+
+            injectedControllerService = _$controller_;
+            injectedRootScope = _$rootScope_;
+            localScope = _$rootScope_.$new();
+            injectedIntervalService = _$interval_;
+            injectedHTTP = _$http_;
+            injectedHTTPBackend = _$httpBackend_;
+            SocketNTPSync = _SocketNTPSync_;
+
+
+            timeSyncController = injectedControllerService('TimeSyncController', {
+                $http: injectedHTTP,
+                $interval: injectedIntervalService,
+                $scope: localScope,
+                SocketNTPSync: SocketNTPSync,
+                LocalClockService: FrozenClockService
+            });
+
+        }));
+
+    beforeEach(function () {
+
+        var urlValidator = function (url) {
+            return url === '/doSynchronize.json';
+        };
+
+
+        injectedHTTPBackend.expectGET(urlValidator).respond(function () {
+            return [200, sampleServerResponse];
+        });
+    // This for simplerResponse code:
+    //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
+
+    });
+
+
+    afterEach(function () {
+        //This verifies that all calls came through.
+        injectedHTTPBackend.verifyNoOutstandingExpectation();
+        injectedHTTPBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests stuff
+    });
+
+
+
+    it('Parses The Response if Server Response is OK', function () {
+        expect(injectedHTTPBackend.flush).not.toThrow();
+        expect(timeSyncController.fServerData).toBeDefined();
+        expect(timeSyncController.fServerData).not.toEqual([]);
+        expect(timeSyncController.fServerData.fDeltaData).toBeDefined();
+        expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toBeDefined();
+        expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toEqual(1456284825334);
+    });
 
 });
