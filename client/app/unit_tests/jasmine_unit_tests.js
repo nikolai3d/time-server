@@ -61,21 +61,21 @@ describe('Component Availability', function () { //describe specifies a "spec" :
 });
 
 
-    var MockClockService = {
-        Now: function () {
+var MockClockService = {
+    Now: function () {
 
-            var clientNow = new Date();
-            return clientNow.getTime();
-        }
-    };
+        var clientNow = new Date();
+        return clientNow.getTime();
+    }
+};
 
-    var FrozenClockService = {
-        Now: function () {
+var FrozenClockService = {
+    Now: function () {
 
-            var frozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
-            return frozenTime.getTime();
-        }
-    };
+        var frozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
+        return frozenTime.getTime();
+    }
+};
 
 describe('TimeSyncController Empty Server Communication', function () {
     //This tests local time synchronization, the server, when synchronized, does not throw an error, but does not return //anything else either.
@@ -221,7 +221,7 @@ describe('TimeSyncController Empty Server Communication', function () {
         //injectedRootScope.$apply();
         injectedIntervalService.flush(5000);
 
-        console.log(tsController.fRealTimeSyncCount);
+        //console.log(tsController.fRealTimeSyncCount);
         expect(tsController.fRealTimeSyncCount).toEqual(500);
     });
 });
@@ -292,8 +292,8 @@ describe('TimeSyncController Initial Server Synchronization', function () {
         injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(function () {
             return [200, sampleServerResponse];
         });
-    // This for simplerResponse code:
-    //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
+        // This for simplerResponse code:
+        //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
         expect(injectedHTTPBackend.flush).not.toThrow();
         expect(timeSyncController.fServerData).toBeDefined();
         expect(timeSyncController.fServerData).not.toEqual([]);
@@ -302,16 +302,19 @@ describe('TimeSyncController Initial Server Synchronization', function () {
         expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toEqual(1456284825334);
     });
 
-    it('Sets Error State If Server Error', function () {
-        injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(500);
-        expect(injectedHTTPBackend.flush).not.toThrow();
-        expect(timeSyncController.fServerData).toBeDefined();
-        expect(timeSyncController.fServerData).not.toEqual([]);
-        expect(timeSyncController.fServerData).toEqual("Server Communication Error");
-        expect(timeSyncController.fServerErrorResponse).toBeDefined();
-        expect(timeSyncController.fServerErrorResponse.status).toBeDefined();
-        expect(timeSyncController.fServerErrorResponse.status).toEqual(500);
+    var codeArray = [300, 400, 404, 451, 501, 502, 500];
+    for (i in codeArray) {
+        it('Sets Error State If Server Error ' + codeArray[i], function () {
+            injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(codeArray[i]);
+            expect(injectedHTTPBackend.flush).not.toThrow();
+            expect(timeSyncController.fServerData).toBeDefined();
+            expect(timeSyncController.fServerData).not.toEqual([]);
+            expect(timeSyncController.fServerData).toEqual("Server Communication Error");
+            expect(timeSyncController.fServerErrorResponse).toBeDefined();
+            expect(timeSyncController.fServerErrorResponse.status).toBeDefined();
+            expect(timeSyncController.fServerErrorResponse.status).toEqual(codeArray[i]);
+        });
 
-    });
+    }
 
 });
