@@ -227,14 +227,6 @@ describe('TimeSyncController Empty Server Communication', function () {
 });
 
 describe('TimeSyncController Initial Server Synchronization', function () {
-    var sampleServerResponse = {
-        "fDeltaData": {
-            "fLastServerNTPDelta": 15,
-            "fAverageServerNTPDelta": 15.333333333333334,
-            "fSampleCount": 3,
-            "fServerTimeMS": 1456284825334
-        }
-    };
 
     beforeEach(angular.mock.module('timesync'));
 
@@ -289,6 +281,16 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
 
     it('Parses The Response if Server Response is OK', function () {
+
+        var sampleServerResponse = {
+            "fDeltaData": {
+                "fLastServerNTPDelta": 15,
+                "fAverageServerNTPDelta": 15.333333333333334,
+                "fSampleCount": 3,
+                "fServerTimeMS": 1456284825334
+            }
+        };
+
         injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(function () {
             return [200, sampleServerResponse];
         });
