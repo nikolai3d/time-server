@@ -26,22 +26,18 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
             //Since we told $http to fetch JSON, the result will be automatically decoded into
             //Javascript objects and arrays
 
-            timeRequest.then(function (response) {
+            timeRequest
+                .then(function (response) {
                     TC.fServerData = response.data;
                     TC.fClientData = {
                         fSystemTime: null,
                         fAdjustedSystemTime: null,
                     };
                     TC.fStringData = JSON.stringify(TC.fServerData);
-                },
-                function (response) {
-                    // var data = response.data,
-                    //     status = response.status,
-                    //     header = response.header,
-                    //     config = response.config;
-                    // error handler
-                    alert("JSON Fetch Error!");
-                });
+                }).catch(function (response) {
+                 TC.fServerData = "Server Communication Error";
+                 TC.fServerErrorResponse = response;
+            });
 
         };
 

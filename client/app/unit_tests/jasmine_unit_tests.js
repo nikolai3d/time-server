@@ -248,6 +248,11 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
     var timeSyncController;
 
+    var synchronizeURLValidator = function (url) {
+        return url === '/doSynchronize.json';
+    };
+
+
     beforeEach(angular.mock.inject(
         function (_$controller_,
             _$rootScope_,
@@ -275,22 +280,6 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
         }));
 
-    beforeEach(function () {
-
-        var urlValidator = function (url) {
-            return url === '/doSynchronize.json';
-        };
-
-
-        injectedHTTPBackend.expectGET(urlValidator).respond(function () {
-            return [200, sampleServerResponse];
-        });
-    // This for simplerResponse code:
-    //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
-
-    });
-
-
     afterEach(function () {
         //This verifies that all calls came through.
         injectedHTTPBackend.verifyNoOutstandingExpectation();
@@ -300,12 +289,29 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
 
     it('Parses The Response if Server Response is OK', function () {
+        injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(function () {
+            return [200, sampleServerResponse];
+        });
+    // This for simplerResponse code:
+    //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
         expect(injectedHTTPBackend.flush).not.toThrow();
         expect(timeSyncController.fServerData).toBeDefined();
         expect(timeSyncController.fServerData).not.toEqual([]);
         expect(timeSyncController.fServerData.fDeltaData).toBeDefined();
         expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toBeDefined();
         expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toEqual(1456284825334);
+    });
+
+    it('Sets Error State If Server Error', function () {
+        injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(500);
+        expect(injectedHTTPBackend.flush).not.toThrow();
+        expect(timeSyncController.fServerData).toBeDefined();
+        expect(timeSyncController.fServerData).not.toEqual([]);
+        expect(timeSyncController.fServerData).toEqual("Server Communication Error");
+        expect(timeSyncController.fServerErrorResponse).toBeDefined();
+        expect(timeSyncController.fServerErrorResponse.status).toBeDefined();
+        expect(timeSyncController.fServerErrorResponse.status).toEqual(500);
+
     });
 
 });
