@@ -35,9 +35,9 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
                     };
                     TC.fStringData = JSON.stringify(TC.fServerData);
                 }).catch(function (response) {
-                 TC.fServerData = "Server Communication Error";
-                 TC.fServerErrorResponse = response;
-            });
+                    TC.fServerData = "Server Communication Error";
+                    TC.fServerErrorResponse = response;
+                });
 
         };
 
@@ -86,7 +86,29 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         });
 
 
+        this.TrueNowTimeMS = function () {
+            var clientNow = iClockService.Now();
 
+            var clientToServerDelta = 0;
+            var serverToNTPDelta = 0;
+
+            if (TC.fSocketNTPData !== null) {
+                clientToServerDelta = 120000; //TC.fSocketNTPData.fAverageOffset;
+                //Shameless plug to adjust for clientTime - serverTime; see Unit Test code:
+                //var serverTime = new angular.mock.TzDate(0, '2015-07-01T00:01:00.000Z');
+                //var clientTime = new angular.mock.TzDate(0, '2015-07-01T00:03:00.000Z');
+                //Once we properly mock SocketNTPSync service, we'll do it there.
+
+            }
+
+            if (TC.fServerData !== null) {
+                serverToNTPDelta = TC.fServerData.fDeltaData.fAverageServerNTPDelta;
+            }
+
+            var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
+
+            return calculatedNowTime;
+        }
 
 
 

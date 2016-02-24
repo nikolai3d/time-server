@@ -77,6 +77,15 @@ var FrozenClockService = {
     }
 };
 
+var CustomFrozenClockService = function () {
+    this.fCustomFrozenTime = 0;
+    var CFCS = this;
+    this.Now = function () {
+        return CFCS.fCustomFrozenTime;
+    };
+
+};
+
 describe('TimeSyncController Empty Server Communication', function () {
     //This tests local time synchronization, the server, when synchronized, does not throw an error, but does not return //anything else either.
 
@@ -262,6 +271,7 @@ describe('TimeSyncController Initial Server Synchronization', function () {
             SocketNTPSync = _SocketNTPSync_;
 
 
+
             timeSyncController = injectedControllerService('TimeSyncController', {
                 $http: injectedHTTP,
                 $interval: injectedIntervalService,
@@ -318,5 +328,76 @@ describe('TimeSyncController Initial Server Synchronization', function () {
         });
 
     }
+
+    it('Time Calculations Are Correct For Zero Latency', function () {
+
+
+        //This is NTP time, considered the True Time. At start, it's unknown at the client nor server.
+        var ntpTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
+
+        //This is Server time, At start, it's unknown at the client, but known at server.
+        //In our example, let our server time be ahead of True Time by 1 minute.
+        var serverTime = new angular.mock.TzDate(0, '2015-07-01T00:01:00.000Z');
+
+        //This is Client time. Known at client
+        //In our example, let our client time be ahead of True Time by 3 minutes.
+        var clientTime = new angular.mock.TzDate(0, '2015-07-01T00:03:00.000Z');
+
+        var ntpTimeMS = ntpTime.getTime();
+
+        var serverTimeMS = serverTime.getTime();
+
+        var clientTimeMS = clientTime.getTime();
+
+
+        //If the server runs correctly, it's going to calculate delta between serverTime and ntpTime.
+        var mockServerNTPDelta = serverTimeMS - ntpTimeMS;
+
+        var sampleServerResponse = {
+            "fDeltaData": {
+                "fLastServerNTPDelta": mockServerNTPDelta,
+                "fAverageServerNTPDelta": mockServerNTPDelta,
+                "fSampleCount": 1,
+                "fServerTimeMS": serverTimeMS
+            }
+            //fServerTimeMS is not really needed, since SocketNTPSync will do its own calculations.
+        };
+
+        injectedHTTPBackend.whenGET(synchronizeURLValidator).respond(function () {
+            return [200, sampleServerResponse];
+        });
+
+
+        //Go time:
+        var cfcs = new CustomFrozenClockService();
+
+        cfcs.fCustomFrozenTime = clientTimeMS;
+
+        var thisTimeSyncController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
+            $interval: injectedIntervalService,
+            $scope: localScope,
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: cfcs
+        });
+
+        //During the intervals, client should synchronize with a server and calculate the delta between
+        //clientTime and serverTime.
+
+        //Since the mock of SocketNTP service is not implemented yet, the controller code right now just uses the
+        //hardcoded delta of clientTime - serverTime = 120000 ms (2 minutes)
+
+        injectedIntervalService.flush(5000);
+
+        expect(injectedHTTPBackend.flush).not.toThrow();
+
+        //For no-latency case, the TrueNowTimeMS, using clientTime,
+        // should now be able to calculate NTP Time, unknown at first, but calculatable via all the deltas.
+
+        var calculatedTrueTimeMS = thisTimeSyncController.TrueNowTimeMS();
+
+        expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
+
+    });
 
 });
