@@ -247,8 +247,6 @@ describe('TimeSyncController Initial Server Synchronization', function () {
     var injectedHTTPBackend;
     var injectedRootScope;
 
-    var timeSyncController;
-
     var synchronizeURLValidator = function (url) {
         return url === '/doSynchronize.json';
     };
@@ -272,13 +270,7 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
 
 
-            timeSyncController = injectedControllerService('TimeSyncController', {
-                $http: injectedHTTP,
-                $interval: injectedIntervalService,
-                $scope: localScope,
-                SocketNTPSync: SocketNTPSync,
-                LocalClockService: FrozenClockService
-            });
+
 
         }));
 
@@ -291,6 +283,15 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
 
     it('Parses The Response if Server Response is OK', function () {
+
+
+        var timeSyncController = injectedControllerService('TimeSyncController', {
+            $http: injectedHTTP,
+            $interval: injectedIntervalService,
+            $scope: localScope,
+            SocketNTPSync: SocketNTPSync,
+            LocalClockService: FrozenClockService
+        });
 
         var sampleServerResponse = {
             "fDeltaData": {
@@ -317,6 +318,16 @@ describe('TimeSyncController Initial Server Synchronization', function () {
     var codeArray = [300, 400, 404, 451, 501, 502, 500];
     for (i in codeArray) {
         it('Sets Error State If Server Error ' + codeArray[i], function () {
+
+            var timeSyncController = injectedControllerService('TimeSyncController', {
+                $http: injectedHTTP,
+                $interval: injectedIntervalService,
+                $scope: localScope,
+                SocketNTPSync: SocketNTPSync,
+                LocalClockService: FrozenClockService
+            });
+
+
             injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(codeArray[i]);
             expect(injectedHTTPBackend.flush).not.toThrow();
             expect(timeSyncController.fServerData).toBeDefined();
@@ -383,16 +394,41 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
         var usedSocket = SocketNTPSync.DebugSocket();
 
+        var $q;
 
-        // spyOn(usedSocket, 'emit').and.callFake(function (a, b) {
-        //     console.log(a);
-        //     console.log(b);
-        // });
+        angular.mock.inject(function (_$q_) {
+            $q = _$q_;
+        });
+
+        var promise;
+        var deferred;
+        spyOn(usedSocket, 'emit').and.callFake(function (a, b) {
+            expect(a).toEqual('ntp:client_sync');
+            expect(b.t0).toBeDefined();
+
+            deferred = $q.defer();
+            promise = deferred.promise;
+
+            promise.then(function () {
+
+            });
+
+        });
 
         var mockT0 = clientTimeMS;
         var mockT1 = serverTimeMS;
 
-        usedSocket.receive('ntp:server_sync', {t0 : mockT0, t1 : mockT1});
+        usedSocket.receive('ntp:server_sync', {
+            t0: mockT0,
+            t1: mockT1
+        });
+        // var mockT0 = clientTimeMS;
+        // var mockT1 = serverTimeMS;
+        //
+        // usedSocket.receive('ntp:server_sync', {
+        //     t0: mockT0,
+        //     t1: mockT1
+        // });
 
         //During the intervals, client should synchronize with a server and calculate the delta between
         //clientTime and serverTime.
@@ -401,6 +437,10 @@ describe('TimeSyncController Initial Server Synchronization', function () {
         //hardcoded delta of clientTime - serverTime = 120000 ms (2 minutes)
 
         injectedIntervalService.flush(5000);
+
+        //deferred.resolve();
+
+        //injectedRootScope.$apply();
 
         expect(injectedHTTPBackend.flush).not.toThrow();
 
