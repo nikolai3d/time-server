@@ -27,7 +27,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
                 });
             };
 
-            var onReceiveNTPPing = function (data) {
+            this.onReceiveNTPPing = function (data) {
 
                 var nowTime = data.t0; //Date.now(); //Shameless plug to allow unit tests to work.
                 var latency = nowTime - data.t0;
@@ -75,7 +75,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
 
             this.fPingSamples = [];
             this.fSocket = iSocket;
-            this.fSocket.on('ntp:server_sync', onReceiveNTPPing);
+            this.fSocket.on('ntp:server_sync', this.onReceiveNTPPing);
 
             var intervalHandler = $interval(sendNTPPing, kSampleDelayMS);
 
