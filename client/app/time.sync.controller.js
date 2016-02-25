@@ -93,12 +93,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
             var serverToNTPDelta = 0;
 
             if (TC.fSocketNTPData !== null) {
-                clientToServerDelta = 120000; //TC.fSocketNTPData.fAverageOffset;
-                //Shameless plug to adjust for clientTime - serverTime; see Unit Test code:
-                //var serverTime = new angular.mock.TzDate(0, '2015-07-01T00:01:00.000Z');
-                //var clientTime = new angular.mock.TzDate(0, '2015-07-01T00:03:00.000Z');
-                //Once we properly mock SocketNTPSync service, we'll do it there.
-
+                clientToServerDelta = TC.fSocketNTPData.fAverageOffset;
             }
 
             if (TC.fServerData !== null) {

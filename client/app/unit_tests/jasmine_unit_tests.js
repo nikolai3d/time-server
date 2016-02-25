@@ -381,6 +381,19 @@ describe('TimeSyncController Initial Server Synchronization', function () {
             LocalClockService: cfcs
         });
 
+        var usedSocket = SocketNTPSync.DebugSocket();
+
+
+        // spyOn(usedSocket, 'emit').and.callFake(function (a, b) {
+        //     console.log(a);
+        //     console.log(b);
+        // });
+
+        var mockT0 = clientTimeMS;
+        var mockT1 = serverTimeMS;
+
+        usedSocket.receive('ntp:server_sync', {t0 : mockT0, t1 : mockT1});
+
         //During the intervals, client should synchronize with a server and calculate the delta between
         //clientTime and serverTime.
 

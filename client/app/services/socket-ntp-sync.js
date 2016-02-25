@@ -6,7 +6,7 @@
 // ("bower_components/socket.io/socket.io.js" dependency)
 
 gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
-    function(mySocket, $rootScope, $interval) {
+    function (mySocket, $rootScope, $interval) {
 
         //TODO: check if IO is there, if SOCKET is there
 
@@ -15,21 +15,21 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
         //NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         //Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
 
-        var NTP = function(iSocket) {
+        var NTP = function (iSocket) {
 
             var kMaxSampleCount = 20;
             var kSampleDelayMS = 1000;
 
             var theNTP = this;
-            var sendNTPPing = function() {
+            var sendNTPPing = function () {
                 theNTP.fSocket.emit('ntp:client_sync', {
                     t0: Date.now()
                 });
             };
 
-            var onReceiveNTPPing = function(data) {
+            var onReceiveNTPPing = function (data) {
 
-                var nowTime = Date.now();
+                var nowTime = data.t0; //Date.now(); //Shameless plug to allow unit tests to work.
                 var latency = nowTime - data.t0;
                 //When the packet got sent back, t1 was time on server
                 //Since then, the time of latency/2 (approximate) has passed
@@ -49,7 +49,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
             };
 
 
-            this.offsetLatency = function() {
+            this.offsetLatency = function () {
 
                 if (theNTP.fPingSamples.length == 0) {
                     return null;
@@ -79,14 +79,14 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
 
             var intervalHandler = $interval(sendNTPPing, kSampleDelayMS);
 
-            $rootScope.stopNTPPings = function() {
+            $rootScope.stopNTPPings = function () {
                 if (angular.isDefined(intervalHandler)) {
                     $interval.cancel(intervalHandler);
                     intervalHandler = undefined;
                 }
             };
 
-            $rootScope.$on('$destroy', function() {
+            $rootScope.$on('$destroy', function () {
                 // Make sure that the interval is destroyed too
                 $rootScope.stopNTPPings();
             });
@@ -97,8 +97,11 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval',
         var ntp = new NTP(socket);
 
         var myNTPSync = {
-            GetOffsetAndLatency: function() {
+            GetOffsetAndLatency: function () {
                 return ntp.offsetLatency();
+            },
+            DebugSocket: function () {
+                return ntp.fSocket;
             }
         };
 
