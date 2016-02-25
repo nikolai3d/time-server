@@ -335,95 +335,9 @@ describe('TimeSyncController Initial Server Synchronization', function () {
 
     }
 
-    it('Time Calculations Are Correct For Zero Latency', function () {
-
-
-        //This is NTP time, considered the True Time. At start, it's unknown at the client nor server.
-        var ntpTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
-
-        //This is Server time, At start, it's unknown at the client, but known at server.
-        //In our example, let our server time be ahead of True Time by 1 minute.
-        var serverTime = new angular.mock.TzDate(0, '2015-07-01T00:01:00.000Z');
-
-        //This is Client time. Known at client
-        //In our example, let our client time be ahead of True Time by 3 minutes.
-        var clientTime = new angular.mock.TzDate(0, '2015-07-01T00:03:00.000Z');
-
-        var ntpTimeMS = ntpTime.getTime();
-
-        var serverTimeMS = serverTime.getTime();
-
-        var clientTimeMS = clientTime.getTime();
-
-
-        //If the server runs correctly, it's going to calculate delta between serverTime and ntpTime.
-        var mockServerNTPDelta = serverTimeMS - ntpTimeMS;
-
-        var sampleServerResponse = {
-            "fDeltaData": {
-                "fLastServerNTPDelta": mockServerNTPDelta,
-                "fAverageServerNTPDelta": mockServerNTPDelta,
-                "fSampleCount": 1,
-                "fServerTimeMS": serverTimeMS
-            }
-            //fServerTimeMS is not really needed, since SocketNTPSync will do its own calculations.
-        };
-
-        injectedHTTPBackend.whenGET(synchronizeURLValidator).respond(function () {
-            return [200, sampleServerResponse];
-        });
-
-
-        //Go time:
-        var cfcs = new CustomFrozenClockService();
-
-        cfcs.fCustomFrozenTime = clientTimeMS;
-
-        var thisTimeSyncController = injectedControllerService('TimeSyncController', {
-            $http: injectedHTTP,
-            $interval: injectedIntervalService,
-            $scope: localScope,
-            SocketNTPSync: SocketNTPSync,
-            LocalClockService: cfcs
-        });
-
-        var usedSocket = SocketNTPSync.DebugSocket();
-
-        var mockT0 = clientTimeMS;
-        var mockT1 = serverTimeMS;
-
-        usedSocket.receive('ntp:server_sync', {
-            t0: mockT0,
-            t1: mockT1
-        });
-
-
-        //During the intervals, client should synchronize with a server and calculate the delta between
-        //clientTime and serverTime.
-
-        //Since the mock of SocketNTP service is not implemented yet, the controller code right now just uses the
-        //hardcoded delta of clientTime - serverTime = 120000 ms (2 minutes)
-
-        injectedIntervalService.flush(5000);
-
-        // deferred.resolve();
-        //
-        // injectedRootScope.$apply();
-
-        expect(injectedHTTPBackend.flush).not.toThrow();
-
-        //For no-latency case, the TrueNowTimeMS, using clientTime,
-        // should now be able to calculate NTP Time, unknown at first, but calculatable via all the deltas.
-
-        var calculatedTrueTimeMS = thisTimeSyncController.TrueNowTimeMS();
-
-        expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
-
-    });
-
 });
 
-describe('Asynchronous Send/Receive NTP Sockets', function () {
+describe('Send/Receive NTP Sockets, Timing Calculation Checks', function () {
 
     beforeEach(angular.mock.module('timesync'));
 
@@ -438,6 +352,14 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
     var synchronizeURLValidator = function (url) {
         return url === '/doSynchronize.json';
     };
+    var $q;
+    var $timeout;
+
+    var ntpTimeMS;
+    var serverTimeMS;
+    var clientTimeMS;
+    var usedSocket;
+    var thisTimeSyncController;
 
 
     beforeEach(angular.mock.inject(
@@ -446,7 +368,9 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
             _$interval_,
             _$http_,
             _$httpBackend_,
-            _SocketNTPSync_) {
+            _SocketNTPSync_,
+            _$q_,
+            _$timeout_) {
 
             injectedControllerService = _$controller_;
             injectedRootScope = _$rootScope_;
@@ -455,10 +379,11 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
             injectedHTTP = _$http_;
             injectedHTTPBackend = _$httpBackend_;
             SocketNTPSync = _SocketNTPSync_;
+            $q = _$q_;
+            $timeout = _$timeout_;
         }));
 
-    it('Emits/Receives NTP Socket and Correctly Calculates Time for Zero Latency case',function () {
-
+    beforeEach(function () {
         //This is NTP time, considered the True Time. At start, it's unknown at the client nor server.
         var ntpTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
 
@@ -470,11 +395,11 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
         //In our example, let our client time be ahead of True Time by 3 minutes.
         var clientTime = new angular.mock.TzDate(0, '2015-07-01T00:03:00.000Z');
 
-        var ntpTimeMS = ntpTime.getTime();
+        ntpTimeMS = ntpTime.getTime();
 
-        var serverTimeMS = serverTime.getTime();
+        serverTimeMS = serverTime.getTime();
 
-        var clientTimeMS = clientTime.getTime();
+        clientTimeMS = clientTime.getTime();
 
         var mockServerNTPDelta = serverTimeMS - ntpTimeMS;
 
@@ -496,7 +421,7 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
 
         cfcs.fCustomFrozenTime = clientTimeMS;
 
-        var thisTimeSyncController = injectedControllerService('TimeSyncController', {
+        thisTimeSyncController = injectedControllerService('TimeSyncController', {
             $http: injectedHTTP,
             $interval: injectedIntervalService,
             $scope: localScope,
@@ -504,31 +429,58 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
             LocalClockService: cfcs
         });
 
-        var usedSocket = SocketNTPSync.DebugSocket();
+        usedSocket = SocketNTPSync.DebugSocket();
         expect(SocketNTPSync.GetOffsetAndLatency()).toEqual(null);
+    });
 
-        var $q;
-        var $timeout;
-        angular.mock.inject(function (_$q_, _$timeout_) {
-            $q = _$q_;
-            $timeout = _$timeout_;
+    afterEach(function () {
+
+        //After each test, for no-latency case, the TrueNowTimeMS, using clientTime,
+        //should be able to precisely calculate NTP Time
+
+        var calculatedTrueTimeMS = thisTimeSyncController.TrueNowTimeMS();
+
+        expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
+
+        injectedHTTPBackend.verifyNoOutstandingExpectation();
+        injectedHTTPBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests
+
+    });
+
+    it('Forces NTP Socket without listening to its Emit, and correctly calculates time for Zero Latency Case', function () {
+        var mockT0 = clientTimeMS;
+        var mockT1 = serverTimeMS;
+
+        usedSocket.receive('ntp:server_sync', {
+            t0: mockT0,
+            t1: mockT1
         });
+
+        injectedIntervalService.flush(5000);
+
+        expect(injectedHTTPBackend.flush).not.toThrow();
+    });
+
+    it('Emits/Receives NTP Socket and Correctly Calculates Time for Zero Latency case', function () {
 
         var promise;
         var deferred;
         var responseScheduled = false;
 
-        spyOn(usedSocket, 'emit').and.callFake(function (a, b) {
+        var fakeNTPPingResponder = function (a, b) {
+
+            //Ensuring our ping packet format is what we expect.
+            expect(a).toBeDefined();
+            expect(b).toBeDefined();
+
             expect(a).toEqual('ntp:client_sync');
             expect(b.t0).toBeDefined();
 
-            deferred = $q.defer();
-            promise = deferred.promise;
+            //Preparing a response
+            var mockT0 = clientTimeMS; //NOTE: Response currently ignores the incoming t0 value
+            var mockT1 = serverTimeMS;
 
-            promise.then(function () {
-                var mockT0 = clientTimeMS;
-                var mockT1 = serverTimeMS;
-
+            var sendNTPResponse = function () {
                 $timeout(function () {
                     //If we call it outside timeout, things don't work.
                     //We get nested digest/apply errors.
@@ -537,49 +489,58 @@ describe('Asynchronous Send/Receive NTP Sockets', function () {
                         t1: mockT1
                     });
                 });
-
                 responseScheduled = true;
-            });
+            }
 
-        });
+            //Scheduling the response;
+            deferred = $q.defer();
+
+            promise = deferred.promise;
+
+            promise.then(sendNTPResponse);
+
+
+        };
+
+
+
+        spyOn(usedSocket, 'emit').and.callFake(fakeNTPPingResponder);
 
 
         //There are two intervals at play, that's why it's tricky here: one is for NTPSync (slow, every 1000 ms)
 
         //Another is fast at 10 ms (heartbeat of the client app)
         expect(deferred).not.toBeDefined(); //'emit' hasn't fired yet, promise is not created.
+
         injectedIntervalService.flush(1000); //This flush makes sure 'emit' is firing during NTP.sendNTPPing
+
         expect(deferred).toBeDefined();
         expect(deferred.promise).toBeDefined();
         expect(deferred.promise).toBe(promise);
 
-        expect(responseScheduled).toEqual(false);
+        expect(responseScheduled).toEqual(false); //Promise not resolved yet
+
         deferred.resolve();
+
         expect(responseScheduled).toEqual(false); //Promise is resolved but the crank of AngularJS has not been turned.
+
         injectedRootScope.$apply(); //Turn the crank
+
         expect(responseScheduled).toEqual(true); //Promise is resolved
 
         //Promise should be resolved at this point, but our response to socket is sent in a timeout.
 
+        expect(SocketNTPSync.GetOffsetAndLatency()).toEqual(null); //No data should have been received yet
+
         $timeout.flush(); //This will ensure the usedSocket.receive is firing and the data gets to the SocketNTPSync
+
         expect(SocketNTPSync.GetOffsetAndLatency()).not.toEqual(null);
-
-
 
         expect(injectedHTTPBackend.flush).not.toThrow();
 
         injectedIntervalService.flush(1000); //This flush makes sure heartbeat runs, and the SocketNTPSync.GetOffsetAndLatency(); is called by the controller, thus filling the TC.fSocketNTPData, needed for calculation.
 
 
-        //For no-latency case, the TrueNowTimeMS, using clientTime,
-        // should now be able to calculate NTP Time, unknown at first, but calculatable via all the deltas.
-
-        var calculatedTrueTimeMS = thisTimeSyncController.TrueNowTimeMS();
-
-        expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
-
-        injectedHTTPBackend.verifyNoOutstandingExpectation();
-        injectedHTTPBackend.verifyNoOutstandingRequest(); //Extra assert to make sure we flush all backend requests
 
     });
 });
