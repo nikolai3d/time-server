@@ -415,6 +415,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
         });
 
         usedSocket = SocketNTPSync.DebugSocket();
+        expect(usedSocket).toBeDefined();
         expect(SocketNTPSync.GetOffsetAndLatency()).toEqual(null);
     });
 
