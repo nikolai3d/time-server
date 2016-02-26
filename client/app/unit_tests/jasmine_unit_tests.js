@@ -439,12 +439,16 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
             var mockT0 = clientTimeMS;
             var mockT1 = serverTimeMS;
 
+            injectedIntervalService.flush(1500);
+
             usedSocket.receive('ntp:server_sync', {
                 t0: mockT0,
                 t1: mockT1
             });
 
-            injectedIntervalService.flush(5000);
+            injectedIntervalService.flush(10); // This flush makes sure heartbeat runs, and the
+            // SocketNTPSync.GetOffsetAndLatency(); is called by the controller,
+            // thus filling the TC.fSocketNTPData, needed for calculation.
 
             expect(injectedHTTPBackend.flush).not.toThrow();
         });
