@@ -1,25 +1,7 @@
-var createTimeServer = function(expressServer) {
-
-    expressServer.get('/doSynchronize.json', function(ireq, iResponse) {
-
-        console.log("doSynchronize Request");
-
-        var result = {
-            fDeltaData: keeper.fDeltaData,
-        };
-
-        iResponse.send(JSON.stringify(result));
-
-    });
-};
-
-
-module.exports = {
-    createTimeServer: createTimeServer,
-};
-
-
-
+/**
+ * A "class" that requests NTP time every 10 seconds
+ * Its deltaData is sent back on every '/doSynchronize.json'
+ */
 function Chronos() {
 
     this.fDeltaData = {
@@ -29,13 +11,12 @@ function Chronos() {
         fServerTimeMS: null
     };
 
-
     this.fTotalDelta = 0.0;
 
     var chronosObject = this;
 
     this.Synchronize = function() {
-        //TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
+        // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
 
         var ntpClient = require('ntp-client');
 
@@ -46,7 +27,6 @@ function Chronos() {
                 return;
             }
 
-
             var ntpMilliseconds = date.getTime();
             var serverNow = new Date();
             var serverMilliseconds = serverNow.getTime();
@@ -56,13 +36,12 @@ function Chronos() {
 
             chronosObject.fTotalDelta += serverNTPDelta;
 
-            chronosObject.fDeltaData.fSampleCount++;
+            chronosObject.fDeltaData.fSampleCount += 1;
 
-            chronosObject.fDeltaData.fAverageServerNTPDelta
-                = chronosObject.fTotalDelta / chronosObject.fDeltaData.fSampleCount;
+            chronosObject.fDeltaData.fAverageServerNTPDelta = chronosObject.fTotalDelta /
+                chronosObject.fDeltaData.fSampleCount;
 
             chronosObject.fDeltaData.fServerTimeMS = serverNow.getTime();
-            
 
             console.log("Current (ServerTime) : " + serverNow.getTime() + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
@@ -75,5 +54,23 @@ function Chronos() {
     this.TickInterval = setInterval(this.Synchronize, 10000);
 }
 
-
 var keeper = new Chronos();
+
+var createTimeServer = function(expressServer) {
+
+    expressServer.get('/doSynchronize.json', function(ireq, iResponse) {
+
+        console.log("doSynchronize Request");
+
+        var result = {
+            fDeltaData: keeper.fDeltaData
+        };
+
+        iResponse.send(JSON.stringify(result));
+
+    });
+};
+
+module.exports = {
+    createTimeServer: createTimeServer
+};
