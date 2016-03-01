@@ -14,7 +14,9 @@ module.exports = {
         "no-bitwise": 1, // disallow use of bitwise operators (off by default)
         "no-plusplus": 1, // disallow use of unary operators, ++ and -- (off by default)
         "new-cap": 0,
-        "padded-blocks": 0
+        "padded-blocks": 0,
+        "space-in-parens": 0,
+        "arrow-parens": 0
     },
     "globals": {
         "angular": true,
