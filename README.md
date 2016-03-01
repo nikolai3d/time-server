@@ -15,21 +15,31 @@ ____ _  _    ____ ___  ____ ____ ____ _  _ ____ ____ _ ____    ___  ____ ____  _
 
 # Time Server (an Observeris project)!
 ## Installing all the dependencies
-You need both npm and bower.
+
+### Global tools installation
+
+You need to have these globally installed:
+* `NodeJS` (https://nodejs.org/en/, version >= 4.3.1)
+* `npm` (by default is installed with Node, but use the script below to update to latest, to make sure version >= 3.7.5)
+* `bower` (version >= 3.9.1)
+* `gulp` (version >= 1.7.7)
+
+```
+$ sudo npm install npm@latest -g
+$ sudo npm install -g gulp
+$ sudo npm install -g bower
+```
+
+### Local dependencies installation
+
+Run `npm install` to pull all the dependencies (both server-side and client-side with `bower`), and to run the ES6 -> JS Babel transcoding.
 
 ```
 $ npm install
 
-$ bower install
 ```
 
-Finally, to copy  `socket.io.js` from node_modules, (since `socket.io` bower does not contain `socket.io.js`) use:
-
-```
-$ gulp copy-js
-```
-
-## Running the project
+## Running the server
 1) Open `server.js` and start the app by clicking on the "Run" button in the top menu.
 
 2) Alternatively you can launch the app from the Terminal:
@@ -38,7 +48,19 @@ $ gulp copy-js
 $ node server.js
 ```
 
-Once the server is running, open the project in the shape of '[https://projectname-username.c9.io/](https://projectname-username.c9.io/)'. As you enter your name, watch the Users list (on the left) update. Once you press Enter or Send, the message is shared with all connected clients.
+## Transcoding the client
+Client is written in ES6, so to properly run it in any server, it needs to be transcoded via `Babel`.
+We have a gulp default task to do that, including watch and transcode, simply start this in a separate terminal:
+
+```
+$ gulp
+```
+> NOTE: transcoded sources are placed in `client/app/` folder, from where its read by both client and unit test HTMLs. That folder is not part of git repo, and is going to be ignored by git, but the `npm install` step should run the transcoding
+
+## Unit Testing
+
+Open `client/unit_test.html` in a local browser to run a Jasmine unit test suite.
+
 
 ## Project description
 ### Browser-server NTP synchronization

@@ -106,3 +106,5 @@ gulp.task('watch', function() {
 });
 
 gulp.task('default', ['copy-js', 'babel', 'watch']);
+
+gulp.task('install', ['copy-js', 'babel']);
