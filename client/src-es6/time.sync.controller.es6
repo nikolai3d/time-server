@@ -50,7 +50,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
                 fMostPreciseTime: clientNow
             };
 
-            TC.fSocketNTPData = SocketNTPSync.GetOffsetAndLatency();
+            TC.fSocketNTPData = SocketNTPSync.getOffsetAndLatency();
             if (TC.fSocketNTPData === null) {
                 TC.fSocketNTPData = {
                     fAverageOffset: "No Data Yet",

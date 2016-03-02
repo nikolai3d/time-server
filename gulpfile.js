@@ -80,7 +80,9 @@ gulp.task("babel", function() {
     var tasks = getBabelSourceFolders().map(function(iFolder) {
         return gulp.src(path.join(kBabelSourcePath, iFolder, kBabelSourcesRegexp))
             .pipe(print(babelFileLogPrintFunction))
-            .pipe(babel().on('error', swallowError))
+            .pipe(babel({
+                presets: ['es2015']
+            }).on('error', swallowError))
             .pipe(rename(function(path) {
                 // path.basename += "-babelprocessed";
                 path.extname = kBabelDestinationExtension;
@@ -99,7 +101,7 @@ gulp.task('watch', function() {
     const foldersWatchArray = [];
 
     getBabelSourceFolders().forEach(function(iFolder) {
-        foldersWatchArray.push(path.join(kBabelSourcePath, iFolder, '/**/*.js'));
+        foldersWatchArray.push(path.join(kBabelSourcePath, iFolder, kBabelSourcesRegexp));
     });
 
     gulp.watch(foldersWatchArray, ['babel']);

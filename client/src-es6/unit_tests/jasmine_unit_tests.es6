@@ -416,7 +416,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         usedSocket = SocketNTPSync.DebugSocket();
         expect(usedSocket).toBeDefined();
-        expect(SocketNTPSync.GetOffsetAndLatency()).toEqual(null);
+        expect(SocketNTPSync.getOffsetAndLatency()).toEqual(null);
     });
 
     afterEach(function() {
@@ -447,7 +447,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
             });
 
             injectedIntervalService.flush(10); // This flush makes sure heartbeat runs, and the
-            // SocketNTPSync.GetOffsetAndLatency(); is called by the controller,
+            // SocketNTPSync.getOffsetAndLatency(); is called by the controller,
             // thus filling the TC.fSocketNTPData, needed for calculation.
 
             expect(injectedHTTPBackend.flush).not.toThrow();
@@ -518,16 +518,16 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         // Promise should be resolved at this point, but our response to socket is sent in a timeout.
 
-        expect(SocketNTPSync.GetOffsetAndLatency()).toEqual(null); // No data should have been received yet
+        expect(SocketNTPSync.getOffsetAndLatency()).toEqual(null); // No data should have been received yet
 
         $timeout.flush(); // This will ensure the usedSocket.receive is firing and the data gets to the SocketNTPSync
 
-        expect(SocketNTPSync.GetOffsetAndLatency()).not.toEqual(null);
+        expect(SocketNTPSync.getOffsetAndLatency()).not.toEqual(null);
 
         expect(injectedHTTPBackend.flush).not.toThrow();
 
         injectedIntervalService.flush(1000); // This flush makes sure heartbeat runs, and the
-        // SocketNTPSync.GetOffsetAndLatency(); is called by the controller,
+        // SocketNTPSync.getOffsetAndLatency(); is called by the controller,
         // thus filling the TC.fSocketNTPData, needed for calculation.
 
     });
