@@ -89,10 +89,10 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
                     return null;
                 }
 
-                var averageOffset = 0.0;
-                var averageLatency = 0.0;
+                let averageOffset = 0.0;
+                let averageLatency = 0.0;
 
-                for (var i = 0; i < this.fPingSamples.length; i += 1) {
+                for (let i = 0; i < this.fPingSamples.length; i += 1) {
                     averageOffset += this.fPingSamples[i].fOffset;
                     averageLatency += this.fPingSamples[i].fLatency;
                 }
@@ -111,7 +111,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
                 // Set up an interval and cancel it once rootScope is going down
 
                 // Send the ping every kSampleDelayMS ms
-                var intervalHandler = $interval(() => {
+                let intervalHandler = $interval(() => {
                     this.doThePing();
                 }, kSampleDelayMS);
 
@@ -130,9 +130,9 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
 
         }
 
-        var ntp = new NTP();
+        const ntp = new NTP();
 
-        var myNTPSync = {
+        const myNTPSync = {
             getOffsetAndLatency: () => {
                 return ntp.getOffsetLatency();
             },
