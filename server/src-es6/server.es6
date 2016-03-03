@@ -19,12 +19,13 @@ var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
 
-var htmlRootPath = path.resolve(__dirname, 'client');
+var htmlRootPath = path.resolve(process.cwd(), 'client');
+console.log(htmlRootPath);
 router.use(express.static(htmlRootPath));
 
 var ntp = require('socket-ntp');
 
-console.log("NTP server started!");
+console.log("NTP server starting!");
 
 io.sockets.on('connection', function(socket) {
     console.log("NTP SYNC start!");

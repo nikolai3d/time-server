@@ -1,6 +1,6 @@
 var gulp = require("gulp");
 var babel = require("gulp-babel");
-// var nodemon = require("gulp-nodemon");
+var nodemon = require("gulp-nodemon");
 var util = require('gulp-util');
 var print = require('gulp-print');
 
@@ -140,6 +140,18 @@ gulp.task("watch_server", function() {
     gulp.watch(babelSourceFolderArray(kBabelServerSourcePath), ['babel_server']);
 });
 
-gulp.task('default', ['copy-js', 'babel_client', 'watch_client', 'babel_server', 'watch_server']);
+gulp.task("start", ["babel_server"], function() {
+    nodemon({
+        script: kBabelServerDestinationPath + '/server.js',
+        ext: 'js',
+        env: {
+            'NODE_ENV': 'development'
+        }
+    }).on('crash', function() {
+        util.log("^^^^ Node didn't run, some problem with the script. ^^^^ ");
+    });
+});
+
+gulp.task('default', ['copy-js', 'babel_client', 'watch_client', 'babel_server', 'start', 'watch_server']);
 
 gulp.task('install', ['copy-js', 'babel_client', 'babel_server']);
