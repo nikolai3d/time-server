@@ -53,21 +53,34 @@ function swallowError(error) {
 // Babel takes a source tree with *.es6 files,
 // and replicates its folder structure in other directory full of .js files.
 // Based on this example: https://github.com/gulpjs/gulp/blob/master/docs/recipes/running-task-steps-per-folder.md
-const kBabelSourcePath = "client/src-es6";
-const kBabelDestinationPath = "client/app";
+const kBabelClientSourcePath = "client/src-es6";
+const kBabelClientDestinationPath = "client/app";
+
+const kBabelServerSourcePath = "server/src-es6";
+const kBabelServerDestinationPath = "server/app";
+
 const kBabelSourcesRegexp = '/**/*.es6';
 const kBabelDestinationExtension = '.js';
+
 /**
- * Gets all the source folders in babelSourcePath, including './'
+ * Gets all the source folders in iBabelSourcePath, including './'
+ * @param {String} iBabelSourcePath, root of a tree to scan
  * @return {Array} array of subfolders' basenames
  */
-function getBabelSourceFolders() {
-    var folders = getFolders(kBabelSourcePath);
+function getBabelSourceFolders(iBabelSourcePath) {
+    var folders = getFolders(iBabelSourcePath);
     folders.push("./");
     return folders;
 }
 
-gulp.task("babel", function() {
+/**
+ * Run the babel tasks on all *.es6 files in the directory,
+ * replicating the folder structure in the destination directory
+ * @param {String} iBabelSourcePath, root of a tree to scan
+ * @param {String} iBabelDestinationPath, destination path
+ * @return {Array} array of subfolders' basenames
+ */
+function babelFolderTree(iBabelSourcePath, iBabelDestinationPath) {
 
     var babelFileLogPrintFunction = function(filepath) {
         return "Babel Transcoding ES6: " + filepath;
@@ -77,11 +90,11 @@ gulp.task("babel", function() {
         return "Babel Result JS is at : " + filepath;
     };
 
-    var tasks = getBabelSourceFolders().map(function(iFolder) {
+    var tasks = getBabelSourceFolders(iBabelSourcePath).map(function(iFolder) {
 
         // See .babelrc for babel() configuration, we use es2015 profile.
 
-        return gulp.src(path.join(kBabelSourcePath, iFolder, kBabelSourcesRegexp))
+        return gulp.src(path.join(iBabelSourcePath, iFolder, kBabelSourcesRegexp))
             .pipe(print(babelFileLogPrintFunction))
             .pipe(babel().on('error', swallowError))
             .pipe(rename(function(path) {
@@ -89,25 +102,44 @@ gulp.task("babel", function() {
                 path.extname = kBabelDestinationExtension;
                 return path;
             }))
-            .pipe(gulp.dest(path.join(kBabelDestinationPath, iFolder)))
+            .pipe(gulp.dest(path.join(iBabelDestinationPath, iFolder)))
             .pipe(print(babelDestination));
     });
 
     return merge(tasks);
 
-});
-
-gulp.task('watch', function() {
-
+}
+/**
+ * Put the directory structure in an array, for a gulp watch task
+ * @param {String} iBabelSourcePath, root of a tree to scan
+ * @return {Array} array of subfolders' full path names + es6 regexp search, to feed into gulp.watch()
+ */
+function babelSourceFolderArray(iBabelSourcePath) {
     const foldersWatchArray = [];
 
-    getBabelSourceFolders().forEach(function(iFolder) {
-        foldersWatchArray.push(path.join(kBabelSourcePath, iFolder, kBabelSourcesRegexp));
+    getBabelSourceFolders(iBabelSourcePath).forEach(function(iFolder) {
+        foldersWatchArray.push(path.join(iBabelSourcePath, iFolder, kBabelSourcesRegexp));
     });
 
-    gulp.watch(foldersWatchArray, ['babel']);
+    return foldersWatchArray;
+}
+
+gulp.task("babel_client", function() {
+    babelFolderTree(kBabelClientSourcePath, kBabelClientDestinationPath);
 });
 
-gulp.task('default', ['copy-js', 'babel', 'watch']);
+gulp.task("watch_client", function() {
+    gulp.watch(babelSourceFolderArray(kBabelClientSourcePath), ['babel_client']);
+});
 
-gulp.task('install', ['copy-js', 'babel']);
+gulp.task("babel_server", function() {
+    babelFolderTree(kBabelServerSourcePath, kBabelServerDestinationPath);
+});
+
+gulp.task("watch_server", function() {
+    gulp.watch(babelSourceFolderArray(kBabelServerSourcePath), ['babel_server']);
+});
+
+gulp.task('default', ['copy-js', 'babel_client', 'watch_client', 'babel_server', 'watch_server']);
+
+gulp.task('install', ['copy-js', 'babel_client', 'babel_server']);

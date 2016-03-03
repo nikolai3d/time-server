@@ -1,4 +1,5 @@
 client/bower_components/*
 node_modules/*
 client/app/*
+server/app/*
 .DS_Store
