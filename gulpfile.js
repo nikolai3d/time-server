@@ -78,11 +78,12 @@ gulp.task("babel", function() {
     };
 
     var tasks = getBabelSourceFolders().map(function(iFolder) {
+
+        // See .babelrc for babel() configuration, we use es2015 profile.
+
         return gulp.src(path.join(kBabelSourcePath, iFolder, kBabelSourcesRegexp))
             .pipe(print(babelFileLogPrintFunction))
-            .pipe(babel({
-                presets: ['es2015']
-            }).on('error', swallowError))
+            .pipe(babel().on('error', swallowError))
             .pipe(rename(function(path) {
                 // path.basename += "-babelprocessed";
                 path.extname = kBabelDestinationExtension;
