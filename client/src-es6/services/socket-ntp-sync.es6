@@ -1,5 +1,41 @@
 /* global gApp */
 
+/**
+ * Creates the promise that resolves with an {offset, latency} object after a successful server ping
+ * @param {Socket} iSocket: a socket.io socket that's used to connect to https://www.npmjs.com/package/socket-ntp
+ * running on server side.
+ * @param {Service} iAsyncService: Deferred Instance Promise Provider
+ * (e.g. $q in Angular https://docs.angularjs.org/api/ng/service/$q )
+ * @return {Promise} Promise that either resolves with successful {offset, latency} object or a server communication
+ * error
+ */
+function socketPingPromise(iSocket, iAsyncService) {
+    const deferred = iAsyncService.defer();
+
+    iSocket.emit('ntp:client_sync', {
+        t0: Date.now()
+    });
+
+    iSocket.on('ntp:server_sync', (iReturnedServerData) => {
+        const nowTime = iReturnedServerData.t0; // Date.now(); // Shameless plug to allow unit tests to work.
+        const latency = nowTime - iReturnedServerData.t0;
+        // When the packet got sent back, t1 was time on server
+        // Since then, the time of latency/2 (approximate) has passed
+        const predictedNowTimeOnServer =
+            iReturnedServerData.t1 + (latency * 0.5);
+        const diff = nowTime - predictedNowTimeOnServer;
+
+        const pingSample = {
+            fOffset: diff,
+            fLatency: latency
+        };
+
+        deferred.resolve(pingSample);
+    });
+
+    return deferred.promise;
+} /* socketPingPromise() */
+
 // 'BtfordSocket' is the socket produced by https://github.com/btford/angular-socket-io
 // ("bower_components/angular-socket-io/socket.min.js" dependency)
 // windowIOSocket is the socket produced by window.io.connect
@@ -25,45 +61,18 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
         // NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         // Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
 
-        var kMaxSampleCount = 20;
-        var kSampleDelayMS = 1000;
-
-        var socketPingPromise = () => {
-            var deferred = $q.defer();
-
-            socket.emit('ntp:client_sync', {
-                t0: Date.now()
-            });
-
-            socket.on('ntp:server_sync', (iReturnedServerData) => {
-                var nowTime = iReturnedServerData.t0; // Date.now(); // Shameless plug to allow unit tests to work.
-                var latency = nowTime - iReturnedServerData.t0;
-                // When the packet got sent back, t1 was time on server
-                // Since then, the time of latency/2 (approximate) has passed
-                var predictedNowTimeOnServer =
-                    iReturnedServerData.t1 + (latency * 0.5);
-                var diff = nowTime - predictedNowTimeOnServer;
-
-                var pingSample = {
-                    fOffset: diff,
-                    fLatency: latency
-                };
-
-                deferred.resolve(pingSample);
-            });
-
-            return deferred.promise;
-        }; /* socketPing() */
+        const kMaxSampleCount = 20;
+        const kSampleDelayMS = 1000;
 
         class NTP {
             constructor() {
                 this.fPingSamples = [];
+                this.startPinging();
             } /* constructor */
 
             doThePing() {
 
-                // var samples = this.fPingSamples;
-                socketPingPromise().then((iPingSample) => {
+                socketPingPromise(socket, $q).then((iPingSample) => {
                     this.fPingSamples.unshift(iPingSample);
 
                     if (this.fPingSamples.length > kMaxSampleCount) {
@@ -72,7 +81,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
                 }).catch(function() {
 
                 });
-            }
+            } /* doThePing */
 
             getOffsetLatency() {
 
@@ -99,9 +108,11 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
             } /* getOffsetLatency */
 
             startPinging() {
-                var classObj = this;
-                var intervalHandler = $interval(function() {
-                    classObj.doThePing();
+                // Set up an interval and cancel it once rootScope is going down
+
+                // Send the ping every kSampleDelayMS ms
+                var intervalHandler = $interval(() => {
+                    this.doThePing();
                 }, kSampleDelayMS);
 
                 $rootScope.stopNTPPings = () => {
@@ -115,12 +126,11 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
                     // Make sure that the interval is destroyed too
                     $rootScope.stopNTPPings();
                 });
-            }
+            } /* startPinging */
 
         }
 
         var ntp = new NTP();
-        ntp.startPinging();
 
         var myNTPSync = {
             getOffsetAndLatency: () => {
