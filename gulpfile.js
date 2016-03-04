@@ -9,6 +9,9 @@ var path = require('path');
 var rename = require('gulp-rename');
 var merge = require('merge-stream');
 
+const connect = require("gulp-connect");
+const livereload = require('gulp-livereload');
+
 var socketIOJSPath = ["node_modules/socket.io/node_modules/socket.io-client/socket.io.js"];
 
 var externalJSDepsPath = "client/bower_components/";
@@ -103,7 +106,7 @@ function babelFolderTree(iBabelSourcePath, iBabelDestinationPath) {
                 return path;
             }))
             .pipe(gulp.dest(path.join(iBabelDestinationPath, iFolder)))
-            .pipe(print(babelDestination));
+            .pipe(print(babelDestination)).pipe(livereload());
     });
 
     return merge(tasks);
@@ -129,6 +132,7 @@ gulp.task("babel_client", function() {
 });
 
 gulp.task("watch_client", function() {
+    livereload.listen();
     gulp.watch(babelSourceFolderArray(kBabelClientSourcePath), ['babel_client']);
 });
 
@@ -137,6 +141,7 @@ gulp.task("babel_server", function() {
 });
 
 gulp.task("watch_server", function() {
+    livereload.listen();
     gulp.watch(babelSourceFolderArray(kBabelServerSourcePath), ['babel_server']);
 });
 
@@ -149,6 +154,14 @@ gulp.task("start", ["babel_server"], function() {
         }
     }).on('crash', function() {
         util.log("^^^^ Node didn't run, some problem with the script. ^^^^ ");
+    });
+});
+
+// This one is not used right now.
+gulp.task('connect', function() {
+    connect.server({
+        root: './',
+        livereload: true
     });
 });
 
