@@ -79,6 +79,8 @@ var CustomFrozenClockService = function() {
 
 };
 
+const kGetNTPSyncDataURL = '/getNTPSyncData';
+
 describe('TimeSyncController Empty Server Communication', function() {
     // This tests local time synchronization, the server, when synchronized, does not throw an error,
     // but does not return anything else either.
@@ -113,7 +115,7 @@ describe('TimeSyncController Empty Server Communication', function() {
 
     beforeEach(function() {
         var urlValidator = function(url) {
-            return url === '/doSynchronize.json';
+            return url === kGetNTPSyncDataURL;
         };
 
         injectedHTTPBackend.expectGET(urlValidator).respond(200);
@@ -240,7 +242,7 @@ describe('TimeSyncController Initial Server Synchronization', function() {
     //    var injectedRootScope;
 
     var synchronizeURLValidator = function(url) {
-        return url === '/doSynchronize.json';
+        return url === kGetNTPSyncDataURL;
     };
 
     beforeEach(angular.mock.inject(
@@ -336,7 +338,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
     var injectedRootScope;
 
     var synchronizeURLValidator = function(url) {
-        return url === '/doSynchronize.json';
+        return url === kGetNTPSyncDataURL;
     };
     var $q;
     var $timeout;

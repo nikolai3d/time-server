@@ -9,6 +9,7 @@ var path = require('path');
 var socketio = require('socket.io');
 var express = require('express');
 
+var timeServer = require('./timeServer');
 //
 // ## SimpleServer `SimpleServer(obj)`
 //
@@ -38,6 +39,4 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
     console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
 
-var timeServer = require('./timeServer');
-
-timeServer.createTimeServer(router);
+router.get('/getNTPSyncData', timeServer.timeServerEndpointHandler);

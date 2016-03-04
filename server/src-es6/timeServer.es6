@@ -1,76 +1,97 @@
+var ntpClient = require('ntp-client');
+
 /**
- * A "class" that requests NTP time every 10 seconds
- * Its deltaData is sent back on every '/doSynchronize.json'
+ * Creates a promise that resolves with an Date object after a successful NTP server query
+ * @return {Promise} Promise that either resolves with successful Date object or an NTP server communication
+ * error
  */
-function Chronos() {
+function ntpDatePromise() {
+    // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
 
-    this.fDeltaData = {
-        fLastServerNTPDelta: 0.0,
-        fAverageServerNTPDelta: 0.0,
-        fSampleCount: 0.0,
-        fServerTimeMS: null
-    };
-
-    this.fTotalDelta = 0.0;
-
-    var chronosObject = this;
-
-    this.Synchronize = function() {
-        // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
-
-        var ntpClient = require('ntp-client');
-
-        ntpClient.getNetworkTime("pool.ntp.org", 123, function(err, date) {
+    return new Promise((resolve, reject) => {
+        ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
 
             if (err) {
                 console.error(err);
-                return;
+                reject(err);
             }
 
+            resolve(date);
+        });
+    });
+}
+/**
+ * A class that requests NTP time every 10 seconds
+ * Its deltaData is sent back on every '/doSynchronize.json'
+ */
+class Chronos {
+
+    constructor() {
+
+        this.fDeltaData = {
+            fLastServerNTPDelta: 0.0,
+            fAverageServerNTPDelta: 0.0,
+            fSampleCount: 0.0,
+            fServerTimeMS: null
+        };
+
+        this.fTotalDelta = 0.0;
+
+        this.Synchronize();
+
+        this.TickInterval = setInterval(() => {
+            this.Synchronize();
+        }, 10000);
+    }
+
+    Synchronize() {
+
+        ntpDatePromise().then((date) => {
             var ntpMilliseconds = date.getTime();
             var serverNow = new Date();
             var serverMilliseconds = serverNow.getTime();
             var serverNTPDelta = serverMilliseconds - ntpMilliseconds;
 
-            chronosObject.fDeltaData.fLastServerNTPDelta = serverNTPDelta;
+            this.fDeltaData.fLastServerNTPDelta = serverNTPDelta;
 
-            chronosObject.fTotalDelta += serverNTPDelta;
+            this.fTotalDelta += serverNTPDelta;
 
-            chronosObject.fDeltaData.fSampleCount += 1;
+            this.fDeltaData.fSampleCount += 1;
 
-            chronosObject.fDeltaData.fAverageServerNTPDelta = chronosObject.fTotalDelta /
-                chronosObject.fDeltaData.fSampleCount;
+            this.fDeltaData.fAverageServerNTPDelta = this.fTotalDelta /
+                this.fDeltaData.fSampleCount;
 
-            chronosObject.fDeltaData.fServerTimeMS = serverNow.getTime();
+            this.fDeltaData.fServerTimeMS = serverNow.getTime();
 
             console.log("Current (ServerTime) : " + serverNow.getTime() + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
-            //  console.log(date); // Mon Jul 08 2013 21:31:31 GMT+0200 (Paris, Madrid (heure d’été))
+        }).catch((err) => {
+            console.error(err);
         });
-    };
 
-    this.Synchronize();
+    } /* Synchronize */
 
-    this.TickInterval = setInterval(this.Synchronize, 10000);
 }
 
-var keeper = new Chronos();
+const keeper = new Chronos();
+/**
+ * Express middleware to log requests
+ * @param {Object} iReq: standard Express request
+ * @param {Object} iResponse: standard Express response
+ * @param {Function} next: standard Express next() handler
+ */
+function timeServerEndpointHandler(iReq, iResponse, next) {
+    console.log("doSynchronize Request");
 
-var createTimeServer = function(expressServer) {
+    var result = {
+        fDeltaData: keeper.fDeltaData
+    };
 
-    expressServer.get('/doSynchronize.json', function(ireq, iResponse) {
+    iResponse.send(JSON.stringify(result));
 
-        console.log("doSynchronize Request");
-
-        var result = {
-            fDeltaData: keeper.fDeltaData
-        };
-
-        iResponse.send(JSON.stringify(result));
-
-    });
-};
+    next();
+}
 
 module.exports = {
-    createTimeServer: createTimeServer
+    timeServerEndpointHandler
 };

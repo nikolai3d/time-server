@@ -14,7 +14,7 @@ gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNT
         var clientToServerTimeSync = function() {
             var timeRequest = $http({
                 method: 'GET',
-                url: '/doSynchronize.json'
+                url: '/getNTPSyncData'
             });
             //  Using Angular $http service to make async request to the server.
 
