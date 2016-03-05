@@ -1,102 +1,114 @@
 /* global gApp */
-gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync', 'LocalClockService',
-    function($http, $interval, $scope, SocketNTPSync, iClockService) {
 
-        //  injection: we need an $http service!
-        var TC = this; // Extra variable so we can refer to store from the callback.
+class TimeController {
+    constructor(iHTTPService, iIntervalService, iScope, iSocketNTPSyncService, iClockService) {
 
-        TC.fServerData = []; // We need to initialize before request so page has something to show while loading.
-        TC.fTitle = "UberTimeSync";
-        TC.fStringData = "No Data";
-        TC.fClientData = null;
-        TC.fRealTimeSyncCount = 0;
+        // iIntervalService and iScope are only needed to establish a heartBeat, so they are only needed
+        // in the constructor, and are not stored in the class.
 
-        var clientToServerTimeSync = function() {
-            var timeRequest = $http({
-                method: 'GET',
-                url: '/getNTPSyncData'
-            });
-            //  Using Angular $http service to make async request to the server.
+        this.fHTTPService = iHTTPService;
+        this.fClockService = iClockService;
+        this.fSocketNTPSyncService = iSocketNTPSyncService;
 
-            //  Other way would be:
-            //  var gemsPromise = $http.get('/products.json', {apiKey: 'myApiKey'});
+        this.fServerData = [];
+        this.fTitle = "UberTimeSync";
+        this.fStringData = "No Data";
+        this.fClientData = null;
+        this.fServerErrorResponse = null;
+        this.fRealTimeSyncCount = 0;
 
-            //  BOTH return a promise object
-
-            //  Since we told $http to fetch JSON, the result will be automatically decoded into
-            //  Javascript objects and arrays
-
-            timeRequest
-                .then(function(response) {
-                    TC.fServerData = response.data;
-                    TC.fClientData = {
-                        fSystemTime: null,
-                        fAdjustedSystemTime: null
-                    };
-                    TC.fStringData = JSON.stringify(TC.fServerData);
-                }).catch(function(response) {
-                    TC.fServerData = "Server Communication Error";
-                    TC.fServerErrorResponse = response;
-                });
-        };
-
-        // Using $interval: https://docs.angularjs.org/api/ng/service/$interval
-
-        var realtimeTimeSync = function() {
-            var clientNow = iClockService.Now();
-
-            TC.fClientData = {
-                fSystemTime: clientNow,
-                fMostPreciseTime: clientNow
-            };
-
-            TC.fSocketNTPData = SocketNTPSync.getOffsetAndLatency();
-            if (TC.fSocketNTPData === null) {
-                TC.fSocketNTPData = {
-                    fAverageOffset: "No Data Yet",
-                    fAverageLatency: "No Data Yet",
-                    fNumberOfSamples: 0
-                };
-            }
-
-            TC.fRealTimeSyncCount += 1.0;
-        };
-
-        clientToServerTimeSync();
+        this.clientToServerTimeSync();
 
         var intervalHandler;
 
-        intervalHandler = $interval(realtimeTimeSync, 10);
+        intervalHandler = iIntervalService(() => {
+            this.heartBeat();
+        }, 10);
 
-        $scope.stopSync = function() {
+        iScope.stopSync = function() {
             if (angular.isDefined(intervalHandler)) {
-                $interval.cancel(intervalHandler);
+                iIntervalService.cancel(intervalHandler);
                 intervalHandler = undefined;
             }
         };
 
-        $scope.$on('$destroy', function() {
+        iScope.$on('$destroy', function() {
             // Make sure that the interval is destroyed too
-            $scope.stopSync();
+            iScope.stopSync();
+        });
+    }
+
+    heartBeat() {
+        var clientNow = this.fClockService.Now();
+
+        this.fClientData = {
+            fSystemTime: clientNow,
+            fMostPreciseTime: clientNow
+        };
+
+        this.fSocketNTPData = this.fSocketNTPSyncService.getOffsetAndLatency();
+        if (this.fSocketNTPData === null) {
+            this.fSocketNTPData = {
+                fAverageOffset: "No Data Yet",
+                fAverageLatency: "No Data Yet",
+                fNumberOfSamples: 0
+            };
+        }
+
+        this.fRealTimeSyncCount += 1.0;
+    }
+
+    TrueNowTimeMS() {
+        var clientNow = this.fClockService.Now();
+
+        var clientToServerDelta = 0;
+        var serverToNTPDelta = 0;
+
+        if (this.fSocketNTPData !== null) {
+            clientToServerDelta = this.fSocketNTPData.fAverageOffset;
+        }
+
+        if (this.fServerData !== null) {
+            serverToNTPDelta = this.fServerData.fDeltaData.fAverageServerNTPDelta;
+        }
+
+        var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
+
+        return calculatedNowTime;
+    }
+
+    clientToServerTimeSync() {
+        var timeRequest = this.fHTTPService({
+            method: 'GET',
+            url: '/getNTPSyncData'
         });
 
-        this.TrueNowTimeMS = function() {
-            var clientNow = iClockService.Now();
+        timeRequest
+            .then((response) => {
+                this.fServerData = response.data;
+                this.fClientData = {
+                    fSystemTime: null,
+                    fAdjustedSystemTime: null
+                };
+                this.fStringData = JSON.stringify(this.fServerData);
+            }).catch((response) => {
+                this.fServerData = "Server Communication Error";
+                this.fServerErrorResponse = response;
+            });
+    }
 
-            var clientToServerDelta = 0;
-            var serverToNTPDelta = 0;
+}
 
-            if (TC.fSocketNTPData !== null) {
-                clientToServerDelta = TC.fSocketNTPData.fAverageOffset;
-            }
+gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync', 'LocalClockService',
+    function($http, $interval, $scope, SocketNTPSync, iClockService) {
 
-            if (TC.fServerData !== null) {
-                serverToNTPDelta = TC.fServerData.fDeltaData.fAverageServerNTPDelta;
-            }
+        const timeControllerInstance = new TimeController($http, $interval, $scope, SocketNTPSync,
+            iClockService);
 
-            var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
+        this.fTC = timeControllerInstance;
 
-            return calculatedNowTime;
+        this.TrueNowTimeMS = () => {
+            return timeControllerInstance.TrueNowTimeMS();
         };
 
     }
