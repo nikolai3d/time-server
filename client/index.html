@@ -1,86 +1,99 @@
 <!doctype html>
 <html lang="en" ng-app="timesync">
 
-<head>
-  <title>Time Server (An Observeris Project)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
-  <style>
-    body {
-      padding-top: 60px;
-    }
-  </style>
-  <!-- Semantic UI stuff -->
+  <head>
+    <title>Time Server (An Observeris Project)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+    <style>
+      body {
+        padding-top: 60px;
+      }
 
-  <link rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css">
-   <!--  <script src="/semantic/dist/semantic.min.js"></script> -->
+    </style>
+    <!-- Semantic UI stuff -->
 
+    <link rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css">
+    <!--  <script src="/semantic/dist/semantic.min.js"></script> -->
 
-</head>
-<script type="text/javascript" src="bower_components/socket.io/socket.io.js"></script>
-<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
-<script type="text/javascript" src="bower_components/angular-resource/angular-resource.min.js"></script>
-<script type="text/javascript" src="bower_components/angular-route/angular-route.min.js"></script>
-<script type="text/javascript" src="bower_components/angular-socket-io/socket.min.js"></script>
+  </head>
+  <script type="text/javascript" src="bower_components/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular-resource/angular-resource.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular-route/angular-route.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular-socket-io/socket.min.js"></script>
 
-<!-- Core Angular App -->
-<script type="text/javascript" src="app/app.js"></script>
+  <!-- Core Angular App -->
+  <script type="text/javascript" src="app/app.js"></script>
 
+  <!-- Extra Services for our Angular App -->
+  <script type="text/javascript" src="app/services/socket-ntp-sync.js"></script>
 
+  <script type="text/javascript" src="app/time.sync.controller.js"></script>
 
-<!-- Extra Services for our Angular App -->
-<script type="text/javascript" src="app/services/socket-ntp-sync.js"></script>
+  <body>
+    <div class="tx-out" ng-controller="TimeSyncController as timer">
+      <div class="ui container">
+        <div class="ui one column grid">
+          <div class="column">
+            <div class="ui stacked segment">
+              <p>Controller name:
+                {{timer.fTitle}}</p>
 
-<script type="text/javascript" src="app/time.sync.controller.js"></script>
-
-<body>
-  <div class="tx-out" ng-controller="TimeSyncController as timer">
-
-<div class="ui four column doubling stackable grid container">
-  <div class="column">
-      <div class="ui stacked segment">
-      <p>Controller name: {{timer.fTitle}}</p>
-
-      <p>Controller data: {{timer.fStringData}}</p>
-      </div>
-  </div>
-  <div class="column">
-       <div class="ui stacked segment">
-           <div class="ui segment red">
-      <p>Average delta: {{timer.fServerData.fDeltaData.fAverageServerNTPDelta}}</p>
+              <p>Controller data:
+                {{timer.fStringData}}</p>
             </div>
-            <div class="ui segment blue">
-          <p>Server Time MS: {{timer.fServerData.fDeltaData.fServerTimeMS}}</p>
+          </div>
+          <div class="column">
+            <div class="ui three column grid">
+              <div class="column">
+                <div class="ui stacked segment">
+                  <div class="ui segment red">
+                    <p>Average delta:
+                      {{timer.fServerData.fDeltaData.fAverageServerNTPDelta}}</p>
+                  </div>
+                  <div class="ui segment blue">
+                    <p>Server Time MS:
+                      {{timer.fServerData.fDeltaData.fServerTimeMS}}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="column">
+                <div class="ui stacked segment">
+                  <div class="ui segment orange">
+                    <p>Local Time:
+                      {{timer.fClientData.fSystemTime}}</p>
+                  </div>
+                  <div class="ui segment orange">
+                    <p>Most Precise Local Time:
+                      {{timer.fClientData.fMostPreciseTime}}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="column">
+                <div class="ui stacked segment">
+                  <div class="ui segment red">
+                    <p>Socket NTP offset:
+                      {{timer.fSocketNTPData.fAverageOffset}}
+                      ms ({{timer.fSocketNTPData.fNumberOfSamples}}
+                      samples)</p>
+                  </div>
+                  <div class="ui segment red">
+                    <p>Socket NTP latency:
+                      {{timer.fSocketNTPData.fAverageLatency}}
+                      ms ({{timer.fSocketNTPData.fNumberOfSamples}}
+                      samples)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      </div>
-  </div>
-  <div class="column">
-      <div class="ui stacked segment">
-          <div class="ui segment orange">
-      <p>Local Time: {{timer.fClientData.fSystemTime}}</p>
-  </div>
-  <div class="ui segment orange">
-          <p>Most Precise Local Time: {{timer.fClientData.fMostPreciseTime}}</p>
-</div>
-      </div>
-  </div>
-  <div class="column">
-      <div class="ui stacked segment">
-          <div class="ui segment red">
-      <p>Socket NTP offset: {{timer.fSocketNTPData.fAverageOffset}} ms ({{timer.fSocketNTPData.fNumberOfSamples}} samples)</p>
-  </div>
-  <div class="ui segment red">
-          <p>Socket NTP latency: {{timer.fSocketNTPData.fAverageLatency}} ms ({{timer.fSocketNTPData.fNumberOfSamples}} samples)</p>
-      </div>
-      </div>
-  </div>
-</div>
-</div>
-
-
-</body>
+    </div>
+  </body>
 
 </html>
