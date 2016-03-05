@@ -49,7 +49,8 @@ describe('Component Availability', function() { // describe specifies a "spec" :
         });
 
         expect(tsController).toBeDefined();
-        expect(tsController.fTitle).toEqual('UberTimeSync');
+        expect(tsController.fTC).toBeDefined();
+        expect(tsController.fTC.fTitle).toEqual('UberTimeSync');
 
     });
 });
@@ -154,25 +155,25 @@ describe('TimeSyncController Empty Server Communication', function() {
         });
 
         // Client Data is initialized with null
-        expect(tsController.fClientData).toBeDefined();
-        expect(tsController.fClientData).toBe(null);
+        expect(tsController.fTC.fClientData).toBeDefined();
+        expect(tsController.fTC.fClientData).toBe(null);
         // And Server Data is Empty
-        expect(tsController.fServerData).toBeDefined();
-        expect(tsController.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toBeDefined();
+        expect(tsController.fTC.fServerData).toEqual([]);
 
         injectedIntervalService.flush(5000);
         // After 5 seconds, the clientData should not be NULL since some local time sampling did occur
         // Since we are using FrozenClockService, the time should stand still.
 
         var sampleFrozenTime = new angular.mock.TzDate(0, '2015-07-01T00:00:00.000Z');
-        expect(tsController.fClientData).not.toBe(null);
-        expect(tsController.fClientData.fSystemTime).toBeDefined();
-        expect(tsController.fClientData.fSystemTime).not.toBe(null);
-        expect(tsController.fClientData.fSystemTime).toEqual(sampleFrozenTime.getTime());
+        expect(tsController.fTC.fClientData).not.toBe(null);
+        expect(tsController.fTC.fClientData.fSystemTime).toBeDefined();
+        expect(tsController.fTC.fClientData.fSystemTime).not.toBe(null);
+        expect(tsController.fTC.fClientData.fSystemTime).toEqual(sampleFrozenTime.getTime());
 
         // However, since we are not flushing backend here, fServerData is still the same, empty
-        expect(tsController.fServerData).toBeDefined();
-        expect(tsController.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toBeDefined();
+        expect(tsController.fTC.fServerData).toEqual([]);
 
     });
 
@@ -193,11 +194,11 @@ describe('TimeSyncController Empty Server Communication', function() {
         expect($intervalSpy).toHaveBeenCalled();
 
         // Client Data is initialized with null
-        expect(tsController.fClientData).toBeDefined();
-        expect(tsController.fClientData).toBe(null);
+        expect(tsController.fTC.fClientData).toBeDefined();
+        expect(tsController.fTC.fClientData).toBe(null);
         // And Server Data is Empty
-        expect(tsController.fServerData).toBeDefined();
-        expect(tsController.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toBeDefined();
+        expect(tsController.fTC.fServerData).toEqual([]);
 
         //
         var calls = $intervalSpy.calls.all();
@@ -225,7 +226,7 @@ describe('TimeSyncController Empty Server Communication', function() {
         injectedIntervalService.flush(5000);
 
         // console.log(tsController.fRealTimeSyncCount);
-        expect(tsController.fRealTimeSyncCount).toEqual(500);
+        expect(tsController.fTC.fRealTimeSyncCount).toEqual(500);
     });
 });
 
@@ -295,11 +296,12 @@ describe('TimeSyncController Initial Server Synchronization', function() {
         // This for simplerResponse code:
         //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
         expect(injectedHTTPBackend.flush).not.toThrow();
-        expect(timeSyncController.fServerData).toBeDefined();
-        expect(timeSyncController.fServerData).not.toEqual([]);
-        expect(timeSyncController.fServerData.fDeltaData).toBeDefined();
-        expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toBeDefined();
-        expect(timeSyncController.fServerData.fDeltaData.fServerTimeMS).toEqual(1456284825334);
+        expect(timeSyncController.fTC.fServerData).toBeDefined();
+        expect(timeSyncController.fTC.fServerData).not.toEqual([]);
+        expect(timeSyncController.fTC.fServerData.fDeltaData).toBeDefined();
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerTimeMS).toBeDefined();
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerTimeMS).toEqual(
+            1456284825334);
     });
 
     // var codeArray = [300, 400, 404, 451, 501, 502, 500];
@@ -315,12 +317,12 @@ describe('TimeSyncController Initial Server Synchronization', function() {
 
         injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(501);
         expect(injectedHTTPBackend.flush).not.toThrow();
-        expect(timeSyncController.fServerData).toBeDefined();
-        expect(timeSyncController.fServerData).not.toEqual([]);
-        expect(timeSyncController.fServerData).toEqual("Server Communication Error");
-        expect(timeSyncController.fServerErrorResponse).toBeDefined();
-        expect(timeSyncController.fServerErrorResponse.status).toBeDefined();
-        expect(timeSyncController.fServerErrorResponse.status).toEqual(501);
+        expect(timeSyncController.fTC.fServerData).toBeDefined();
+        expect(timeSyncController.fTC.fServerData).not.toEqual([]);
+        expect(timeSyncController.fTC.fServerData).toEqual("Server Communication Error");
+        expect(timeSyncController.fTC.fServerErrorResponse).toBeDefined();
+        expect(timeSyncController.fTC.fServerErrorResponse.status).toBeDefined();
+        expect(timeSyncController.fTC.fServerErrorResponse.status).toEqual(501);
     });
 
 });
