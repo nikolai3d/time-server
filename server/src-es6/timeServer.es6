@@ -42,6 +42,11 @@ function ntpDatePromise() {
     });
 }
 
+/**
+ * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries
+ * @return {Promise} Promise that either resolves with successful average Date object or an NTP server communication
+ * error
+ */
 function ntpDatePromiseBurst() {
     // See http://stackoverflow.com/questions/28683071/how-do-you-synchronously-resolve-a-chain-of-es6-promises
 
@@ -56,6 +61,8 @@ function ntpDatePromiseBurst() {
     // Prepare promise chain
     var p = Promise.resolve();
     for (let i = 0; i < 10; i += 1) {
+        // Chain the promises interleaved with the 'delay' passthrough promise, that resolves after X ms
+        // https://github.com/sindresorhus/delay
         p = p
             .then(delay(1000))
             .then((iRes) => {
@@ -68,6 +75,8 @@ function ntpDatePromiseBurst() {
     }).catch((err) => {
         console.log(`NTP CHAIN Broke with "${err}"`);
     });
+
+    return p;
 }
 /**
  * A class that requests NTP time every 10 seconds
