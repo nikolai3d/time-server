@@ -9,6 +9,9 @@ function ntpDatePromise() {
     // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
 
     return new Promise((resolve, reject) => {
+
+        // See http://www.pool.ntp.org/en/ for usage information
+        // Or just google for "gps clock time server"
         ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
 
             if (err) {
@@ -41,7 +44,7 @@ class Chronos {
 
         this.TickInterval = setInterval(() => {
             this.Synchronize();
-        }, 10000);
+        }, 1000);
     }
 
     Synchronize() {
@@ -59,12 +62,26 @@ class Chronos {
 
         this.fLastNTPRequestStarted = ntpRequestStart;
 
-        ntpDatePromise().then((date) => {
-            const ntpMilliseconds = date.getTime();
+        ntpDatePromise().then((iNTPDate) => {
             const serverNow = new Date();
+            const ntpTimeRaw = iNTPDate.getTime();
+
+            if (ntpTimeRaw < 0) {
+                console.error("ERROR: NEGATIVE TIME RECEIVED, BAD SAMPLE");
+                return;
+            }
+            if (this.fLastNTPRequestStarted === null) {
+                console.error(
+                    "ERROR: Received the response but do not know when it started! SHOULDN'T HAPPEN!"
+                );
+                return;
+            }
+            const ntpRequestElapsed = serverNow.getTime() - this.fLastNTPRequestStarted;
+
+            const ntpTimeAdjusted = ntpTimeRaw + ntpRequestElapsed / 2; // Adjust for latency
+
             const serverMilliseconds = serverNow.getTime();
-            const serverNTPDelta = serverMilliseconds - ntpMilliseconds;
-            const ntpRequestElapsed = serverNow - this.fLastNTPRequestStarted;
+            const serverNTPDelta = serverMilliseconds - ntpTimeAdjusted;
             this.fDeltaData.fLastServerNTPDelta = serverNTPDelta;
 
             this.fTotalDelta += serverNTPDelta;
@@ -76,12 +93,19 @@ class Chronos {
 
             this.fDeltaData.fServerTimeMS = serverNow.getTime();
 
-            console.log("Current (ServerTime) : " + serverNow.getTime() + " ms");
+            console.log("===>");
+            console.log("NTPTime RAW : " + ntpTimeRaw + " ms");
+            console.log("NTP Request started: " + this.fLastNTPRequestStarted + " ms");
+            console.log("Latency  : " + ntpRequestElapsed + " ms");
+            console.log("NTPTime Adjusted) : " + ntpTimeAdjusted + " ms");
+            console.log("Current (ServerTime) : " + serverMilliseconds + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
-            console.log(`NTP Request Complete in :${ntpRequestElapsed} ms`);
             this.fLastNTPRequestStarted = null;
         }).catch((err) => {
             console.error("NTP Error (Promise Rejected):" + err);
+            const serverNow = new Date();
+            const ntpRequestElapsed = serverNow.getTime() - this.fLastNTPRequestStarted;
+            console.error(`NTP Request Failed after :${ntpRequestElapsed} ms`);
             this.fLastNTPRequestStarted = null;
         });
 
