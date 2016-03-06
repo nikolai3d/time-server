@@ -1,5 +1,5 @@
-var ntpClient = require('ntp-client');
-
+const ntpClient = require('ntp-client');
+const delay = require('delay');
 
 var gReq = 0;
 var gReqInProgress = false;
@@ -56,10 +56,12 @@ function ntpDatePromiseBurst() {
     // Prepare promise chain
     var p = Promise.resolve();
     for (let i = 0; i < 10; i += 1) {
-        p = p.then((iRes) => {
-            console.log(JSON.stringify(iRes));
-            return ntpDatePromise();
-        });
+        p = p
+            .then(delay(1000))
+            .then((iRes) => {
+                console.log(JSON.stringify(iRes));
+                return ntpDatePromise();
+            });
     }
     p.then(() => {
         console.log("NTP CHAIN DONE");
