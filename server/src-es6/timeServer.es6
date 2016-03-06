@@ -1,5 +1,8 @@
 var ntpClient = require('ntp-client');
 
+
+var gReq = 0;
+var gReqInProgress = false;
 /**
  * Creates a promise that resolves with an Date object after a successful NTP server query
  * @return {Promise} Promise that either resolves with successful Date object or an NTP server communication
@@ -8,19 +11,60 @@ var ntpClient = require('ntp-client');
 function ntpDatePromise() {
     // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
 
-    return new Promise((resolve, reject) => {
+    return new Promise((iResolveFunc, iRejectFunc) => {
 
         // See http://www.pool.ntp.org/en/ for usage information
         // http://www.ntp.org/ About NTP protocol
         // Or just google for "gps clock time server"
+        console.log(`NTP Req ${gReq} start`);
+        const startedReq = gReq;
+        gReq += 1;
+        var startTime = Date.now();
+        if (gReqInProgress === true) {
+            console.error("ERROR: Simultaneous requests running!");
+        }
+        gReqInProgress = true;
         ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
-
+            console.log(`NTP Req ${startedReq} end`);
+            gReqInProgress = false;
             if (err) {
-                reject(err);
+                iRejectFunc(err);
             }
 
-            resolve(date);
+            const latency = Date.now() - startTime;
+
+            iResolveFunc({
+                date,
+                latency
+            });
+
         });
+    });
+}
+
+function ntpDatePromiseBurst() {
+    // See http://stackoverflow.com/questions/28683071/how-do-you-synchronously-resolve-a-chain-of-es6-promises
+
+    // ntpDatePromise().then(() => {
+    //     return ntpDatePromise();
+    // }).then(() => {
+    //     return ntpDatePromise();
+    // }).then(() => {
+    //     return ntpDatePromise();
+    // });
+
+    // Prepare promise chain
+    var p = Promise.resolve();
+    for (let i = 0; i < 10; i += 1) {
+        p = p.then((iRes) => {
+            console.log(JSON.stringify(iRes));
+            return ntpDatePromise();
+        });
+    }
+    p.then(() => {
+        console.log("NTP CHAIN DONE");
+    }).catch((err) => {
+        console.log(`NTP CHAIN Broke with "${err}"`);
     });
 }
 /**
@@ -41,11 +85,11 @@ class Chronos {
         this.fTotalDelta = 0.0;
         this.fLastNTPRequestStarted = null;
 
-        this.Synchronize();
+        // this.Synchronize();
 
-        this.TickInterval = setInterval(() => {
-            this.Synchronize();
-        }, 1000);
+        // this.TickInterval = setInterval(() => {
+        //     this.Synchronize();
+        // }, 1000);
     }
 
     Synchronize() {
@@ -65,7 +109,7 @@ class Chronos {
 
         ntpDatePromise().then((iNTPDate) => {
             const serverNow = new Date();
-            const ntpTimeRaw = iNTPDate.getTime();
+            const ntpTimeRaw = iNTPDate.date.getTime();
 
             if (ntpTimeRaw < 0) {
                 console.error("ERROR: NEGATIVE TIME RECEIVED, BAD SAMPLE");
@@ -97,7 +141,8 @@ class Chronos {
             console.log("===>");
             console.log("NTPTime RAW : " + ntpTimeRaw + " ms");
             console.log("NTP Request started: " + this.fLastNTPRequestStarted + " ms");
-            console.log("Latency  : " + ntpRequestElapsed + " ms");
+            console.log("Latency  1: " + ntpRequestElapsed + " ms");
+            console.log("Latency  2: " + iNTPDate.latency + " ms");
             console.log("NTPTime Adjusted) : " + ntpTimeAdjusted + " ms");
             console.log("Current (ServerTime) : " + serverMilliseconds + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
@@ -113,7 +158,7 @@ class Chronos {
     } /* Synchronize */
 
 }
-
+ntpDatePromiseBurst();
 const keeper = new Chronos();
 /**
  * Express middleware to log requests
