@@ -12,7 +12,6 @@ function ntpDatePromise() {
         ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
 
             if (err) {
-                console.error(err);
                 reject(err);
             }
 
@@ -36,6 +35,7 @@ class Chronos {
         };
 
         this.fTotalDelta = 0.0;
+        this.fLastNTPRequestStarted = null;
 
         this.Synchronize();
 
@@ -45,13 +45,26 @@ class Chronos {
     }
 
     Synchronize() {
+        const ntpRequestStart = Date.now();
+        if (this.fLastNTPRequestStarted !== null) {
+            const elapsedSinceLastRequestStarted = ntpRequestStart - this.fLastNTPRequestStarted;
+
+            console.log(
+                `No NTP Request possible, since last one is still processing
+                 (${elapsedSinceLastRequestStarted} ms elapsed)`
+            );
+
+            return;
+        }
+
+        this.fLastNTPRequestStarted = ntpRequestStart;
 
         ntpDatePromise().then((date) => {
-            var ntpMilliseconds = date.getTime();
-            var serverNow = new Date();
-            var serverMilliseconds = serverNow.getTime();
-            var serverNTPDelta = serverMilliseconds - ntpMilliseconds;
-
+            const ntpMilliseconds = date.getTime();
+            const serverNow = new Date();
+            const serverMilliseconds = serverNow.getTime();
+            const serverNTPDelta = serverMilliseconds - ntpMilliseconds;
+            const ntpRequestElapsed = serverNow - this.fLastNTPRequestStarted;
             this.fDeltaData.fLastServerNTPDelta = serverNTPDelta;
 
             this.fTotalDelta += serverNTPDelta;
@@ -65,8 +78,11 @@ class Chronos {
 
             console.log("Current (ServerTime) : " + serverNow.getTime() + " ms");
             console.log("Current (ServerTime - NTP Time) : " + serverNTPDelta + " ms");
+            console.log(`NTP Request Complete in :${ntpRequestElapsed} ms`);
+            this.fLastNTPRequestStarted = null;
         }).catch((err) => {
-            console.error(err);
+            console.error("NTP Error (Promise Rejected):" + err);
+            this.fLastNTPRequestStarted = null;
         });
 
     } /* Synchronize */
