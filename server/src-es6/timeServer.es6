@@ -11,6 +11,7 @@ function ntpDatePromise() {
     return new Promise((resolve, reject) => {
 
         // See http://www.pool.ntp.org/en/ for usage information
+        // http://www.ntp.org/ About NTP protocol
         // Or just google for "gps clock time server"
         ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
 
