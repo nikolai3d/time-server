@@ -1,83 +1,5 @@
-const ntpClient = require('ntp-client');
-const delay = require('delay');
+var ntpsync = require('./ntpSync');
 
-var gReq = 0;
-var gReqInProgress = false;
-/**
- * Creates a promise that resolves with an Date object after a successful NTP server query
- * @return {Promise} Promise that either resolves with successful Date object or an NTP server communication
- * error
- */
-function ntpDatePromise() {
-    // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
-
-    return new Promise((iResolveFunc, iRejectFunc) => {
-
-        // See http://www.pool.ntp.org/en/ for usage information
-        // http://www.ntp.org/ About NTP protocol
-        // Or just google for "gps clock time server"
-        console.log(`NTP Req ${gReq} start`);
-        const startedReq = gReq;
-        gReq += 1;
-        var startTime = Date.now();
-        if (gReqInProgress === true) {
-            console.error("ERROR: Simultaneous requests running!");
-        }
-        gReqInProgress = true;
-        ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
-            console.log(`NTP Req ${startedReq} end`);
-            gReqInProgress = false;
-            if (err) {
-                iRejectFunc(err);
-            }
-
-            const latency = Date.now() - startTime;
-
-            iResolveFunc({
-                date,
-                latency
-            });
-
-        });
-    });
-}
-
-/**
- * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries
- * @return {Promise} Promise that either resolves with successful average Date object or an NTP server communication
- * error
- */
-function ntpDatePromiseBurst() {
-    // See http://stackoverflow.com/questions/28683071/how-do-you-synchronously-resolve-a-chain-of-es6-promises
-
-    // ntpDatePromise().then(() => {
-    //     return ntpDatePromise();
-    // }).then(() => {
-    //     return ntpDatePromise();
-    // }).then(() => {
-    //     return ntpDatePromise();
-    // });
-
-    // Prepare promise chain
-    var p = Promise.resolve();
-    for (let i = 0; i < 10; i += 1) {
-        // Chain the promises interleaved with the 'delay' passthrough promise, that resolves after X ms
-        // https://github.com/sindresorhus/delay
-        p = p
-            .then(delay(1000))
-            .then((iRes) => {
-                console.log(JSON.stringify(iRes));
-                return ntpDatePromise();
-            });
-    }
-    p.then(() => {
-        console.log("NTP CHAIN DONE");
-    }).catch((err) => {
-        console.log(`NTP CHAIN Broke with "${err}"`);
-    });
-
-    return p;
-}
 /**
  * A class that requests NTP time every 10 seconds
  * Its deltaData is sent back on every '/doSynchronize.json'
@@ -169,7 +91,8 @@ class Chronos {
     } /* Synchronize */
 
 }
-ntpDatePromiseBurst();
+ntpsync.ntpLocalClockDeltaPromise();
+
 const keeper = new Chronos();
 /**
  * Express middleware to log requests
