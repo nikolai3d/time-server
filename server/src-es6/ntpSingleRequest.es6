@@ -19,7 +19,7 @@ function ntpDatePromise(iLocalClockService) {
         console.log(`NTP Req ${gReq} start`);
         const startedReq = gReq;
         gReq += 1;
-        var startTime = iLocalClockService.Now();
+        const localClockStart = iLocalClockService.Now();
         if (gReqInProgress === true) {
             console.error("ERROR: Simultaneous requests running!");
         }
@@ -30,12 +30,13 @@ function ntpDatePromise(iLocalClockService) {
             if (err) {
                 iRejectFunc(err);
             }
-
-            const latency = iLocalClockService.Now() - startTime;
+            const localClockNow = iLocalClockService.Now();
+            const latency = localClockNow - localClockStart;
 
             iResolveFunc({
-                date,
-                latency
+                localClockNow: localClockNow,
+                ntpRaw: date.getTime(),
+                ntpLatency: latency
             });
 
         });

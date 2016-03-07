@@ -2,7 +2,12 @@ const delay = require('delay');
 
 /**
  * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries
- * @return {Promise} Promise that either resolves with successful average Date object or an NTP server communication
+ * @param {ClockService} iLocalClockService: an Object with a Now() function that returns
+ * current local time in Unix milliseconds. Usually just a wrapper for Date.now();
+ * @param {NTPService} iNTPSingleRequestPromiseFunc: an Object with a Now() function that returns
+ * current local time in Unix milliseconds. Usually just a wrapper for Date.now();
+ * @return {Promise} Promise that either resolves with  array of NTP dates, latencies and local times
+ * or an NTP server communication
  * error
  */
 function ntpDatePromiseBurst(iLocalClockService, iNTPSingleRequestPromiseFunc) {
