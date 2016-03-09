@@ -21,24 +21,43 @@ function ntpLocalClockDeltaPromise() {
             let totalServerNTPDelta = 0;
             let totalServerNTPLatency = 0;
             let totalSampleCount = 0;
+
+            let minimalNTPLatency = 1000000000;
+            let minimalNTPLatencyDelta = 0;
+
             for (let b of iBurstDataArray) {
                 const ntpAdjustedTime = b.ntpRaw + b.ntpLatency * 0.5;
                 totalServerNTPDelta += (b.localClockNow - ntpAdjustedTime);
                 totalSampleCount += 1;
                 totalServerNTPLatency += b.ntpLatency;
+
+                if (b.ntpLatency < minimalNTPLatency) {
+                    minimalNTPLatency = b.ntpLatency;
+                    minimalNTPLatencyDelta = (b.localClockNow - ntpAdjustedTime);
+                }
             }
 
-            const serverNTPDelta = totalServerNTPDelta / totalSampleCount;
+            if (totalSampleCount === 0) {
+                iReject("No Samples");
+            }
+
+            const averageNTPDelta = totalServerNTPDelta / totalSampleCount;
             const averageNTPLatency = totalServerNTPLatency / totalSampleCount;
 
             console.log(
-                `Average Server - NTP Delta is ${serverNTPDelta} ms, ${totalSampleCount} samples,` +
+                `Average Server - NTP Delta is ${averageNTPDelta} ms, ${totalSampleCount} samples,` +
                 `${averageNTPLatency} ms average latency`
             );
+            console.log(
+                `Minimal Latency Server - NTP Delta is ${minimalNTPLatencyDelta} ms, ${totalSampleCount} samples,` +
+                `${minimalNTPLatency} ms minimum latency`
+            );
             iResolve({
-                serverNTPDelta,
-                totalSampleCount,
-                averageNTPLatency
+                averageNTPDelta,
+                averageNTPLatency,
+                minimalNTPLatencyDelta,
+                minimalNTPLatency,
+                totalSampleCount
             });
         }).catch((err) => {
             iReject(err);
