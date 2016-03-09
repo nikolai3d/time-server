@@ -24,11 +24,12 @@ function ntpDatePromise(iLocalClockService) {
             console.error("ERROR: Simultaneous requests running!");
         }
         gReqInProgress = true;
-        ntpClient.getNetworkTime("pool.ntp.org", 123, (err, date) => {
+        ntpClient.getNetworkTime("3.pool.ntp.org", 123, (err, date) => {
             console.log(`NTP Req ${startedReq} end`);
             gReqInProgress = false;
             if (err) {
                 iRejectFunc(err);
+                return;
             }
             const localClockNow = iLocalClockService.Now();
             const latency = localClockNow - localClockStart;

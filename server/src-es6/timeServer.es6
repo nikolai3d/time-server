@@ -40,7 +40,7 @@ class Chronos {
 
         this.fLastNTPRequestStarted = ntpRequestStart;
 
-        ntpDatePromise().then((iNTPDate) => {
+        ntpsync.ntpLocalClockDeltaPromise().then((iNTPDate) => {
             const serverNow = new Date();
             const ntpTimeRaw = iNTPDate.date.getTime();
 
