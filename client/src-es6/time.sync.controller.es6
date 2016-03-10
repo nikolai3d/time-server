@@ -85,7 +85,7 @@ class TimeController {
         }
 
         if (this.fServerData !== null) {
-            serverToNTPDelta = this.fServerData.fDeltaData.fAverageServerNTPDelta;
+            serverToNTPDelta = this.fServerData.fDeltaData.fServerNTPDelta;
         }
 
         var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
