@@ -19,7 +19,7 @@ function ntpDatePromiseBurst(iLocalClockService, iNTPSingleRequestPromiseFunc) {
             // Chain the promises interleaved with the 'delay' passthrough promise, that resolves after X ms
             // https://github.com/sindresorhus/delay
             p = p
-                .then(delay(800))
+                .then(delay(10))
                 .then((iRes) => {
                     if (typeof iRes !== 'undefined' && iRes !== null) {
                         burstArray.push(iRes);

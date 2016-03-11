@@ -10,13 +10,28 @@ var gReqInProgress = false;
  */
 function ntpDatePromise(iLocalClockService) {
     // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
+    const serverCarousel = [
+        "0.pool.ntp.org",
+        "1.pool.ntp.org",
+        "2.pool.ntp.org",
+        "3.pool.ntp.org",
+        "0.us.pool.ntp.org",
+        "1.us.pool.ntp.org",
+        "2.us.pool.ntp.org",
+        "3.us.pool.ntp.org",
+        "0.europe.pool.ntp.org",
+        "1.europe.pool.ntp.org",
+        "2.europe.pool.ntp.org",
+        "3.europe.pool.ntp.org"
+    ];
 
     return new Promise((iResolveFunc, iRejectFunc) => {
 
         // See http://www.pool.ntp.org/en/ for usage information
         // http://www.ntp.org/ About NTP protocol
         // Or just google for "gps clock time server"
-        console.log(`NTP Req ${gReq} start`);
+        const serverAddress = serverCarousel[gReq % serverCarousel.length];
+        console.log(`NTP Req ${gReq} start, Pinging ${serverAddress}`);
         const startedReq = gReq;
         gReq += 1;
         const localClockStart = iLocalClockService.Now();
@@ -24,8 +39,9 @@ function ntpDatePromise(iLocalClockService) {
             console.error("ERROR: Simultaneous requests running!");
         }
         gReqInProgress = true;
-        ntpClient.getNetworkTime("2.pool.ntp.org", 123, (err, date) => {
-            console.log(`NTP Req ${startedReq} end`);
+
+        ntpClient.getNetworkTime(serverAddress, 123, (err, date) => {
+            console.log(`NTP Req ${startedReq} end, Received from ${serverAddress}`);
             gReqInProgress = false;
             if (err) {
                 iRejectFunc(err);
