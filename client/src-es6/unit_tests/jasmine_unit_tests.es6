@@ -396,7 +396,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         var sampleServerResponse = {
             "fDeltaData": {
-                "fServerNTPDelta": 60000,
+                "fServerNTPDelta": mockServerNTPDelta,
                 "fServerNTPLatency": 20,
                 "fSampleCount": 3
             }
