@@ -18,7 +18,7 @@ class Chronos {
 
         this.TickInterval = setInterval(() => {
             this.Synchronize();
-        }, 30000);
+        }, 5000);
     }
 
     Synchronize() {

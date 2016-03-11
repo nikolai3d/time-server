@@ -25,6 +25,10 @@ function ntpDatePromise(iLocalClockService) {
         "3.europe.pool.ntp.org"
     ];
 
+    // const serverCarousel = [
+    //     "0.pool.ntp.org"
+    // ];
+
     return new Promise((iResolveFunc, iRejectFunc) => {
 
         // See http://www.pool.ntp.org/en/ for usage information
@@ -32,21 +36,29 @@ function ntpDatePromise(iLocalClockService) {
         // Or just google for "gps clock time server"
         const serverAddress = serverCarousel[gReq % serverCarousel.length];
         console.log(`NTP Req ${gReq} start, Pinging ${serverAddress}`);
+
         const startedReq = gReq;
         gReq += 1;
         const localClockStart = iLocalClockService.Now();
+
         if (gReqInProgress === true) {
             console.error("ERROR: Simultaneous requests running!");
+            iRejectFunc("ERROR: Simultaneous requests running!");
+            return;
         }
-        gReqInProgress = true;
 
+        gReqInProgress = true;
+        ntpClient.ntpReplyTimeout = 500;
         ntpClient.getNetworkTime(serverAddress, 123, (err, date) => {
+
             console.log(`NTP Req ${startedReq} end, Received from ${serverAddress}`);
             gReqInProgress = false;
+
             if (err) {
                 iRejectFunc(err);
                 return;
             }
+
             const localClockNow = iLocalClockService.Now();
             const latency = localClockNow - localClockStart;
 

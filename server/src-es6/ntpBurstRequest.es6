@@ -24,6 +24,12 @@ function ntpDatePromiseBurst(iLocalClockService, iNTPSingleRequestPromiseFunc) {
                     if (typeof iRes !== 'undefined' && iRes !== null) {
                         burstArray.push(iRes);
                     }
+                    console.log(
+                        `OK ${burstArray.length} samples so far`);
+                    return iNTPSingleRequestPromiseFunc(iLocalClockService);
+                }).catch(( /* err */ ) => {
+                    console.log(
+                        `ERR ${burstArray.length} samples so far`);
                     return iNTPSingleRequestPromiseFunc(iLocalClockService);
                 });
         }
@@ -32,11 +38,22 @@ function ntpDatePromiseBurst(iLocalClockService, iNTPSingleRequestPromiseFunc) {
             if (typeof iRes !== 'undefined' && iRes !== null) {
                 burstArray.push(iRes);
             }
+            console.log(
+                `OK ${burstArray.length} samples in the end`);
             iResolve(burstArray);
         }).catch((err) => {
-            console.log(`NTP CHAIN Broke with "${err}"`);
-            iReject(err);
+            console.log("Last chain link Timeout, moving on! " + err);
+            console.log(
+                `ERR ${burstArray.length} samples in the end`);
+            iResolve(burstArray);
         });
+
+        // catch((err) => {
+        //     console.log(`
+        // NTP CHAIN Broke with "${err}"
+        // `);
+        //     iReject(err);
+        // });
     });
 }
 
