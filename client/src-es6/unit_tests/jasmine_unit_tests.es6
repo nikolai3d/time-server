@@ -283,7 +283,7 @@ describe('TimeSyncController Initial Server Synchronization', function() {
 
         var sampleServerResponse = {
             "fDeltaData": {
-                "fServerNTPDelta": 15,
+                "fServerNTPDelta": 60000,
                 "fServerNTPLatency": 20,
                 "fSampleCount": 3
             }
@@ -300,7 +300,7 @@ describe('TimeSyncController Initial Server Synchronization', function() {
         expect(timeSyncController.fTC.fServerData.fDeltaData).toBeDefined();
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toBeDefined();
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toEqual(
-            15);
+            60000);
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPLatency).toBeDefined();
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPLatency).toEqual(
             20);
@@ -396,7 +396,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         var sampleServerResponse = {
             "fDeltaData": {
-                "fServerNTPDelta": 15,
+                "fServerNTPDelta": 60000,
                 "fServerNTPLatency": 20,
                 "fSampleCount": 3
             }
@@ -430,7 +430,7 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         var calculatedTrueTimeMS = thisTimeSyncController.TrueNowTimeMS();
 
-        // expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
+        expect(calculatedTrueTimeMS).toEqual(ntpTimeMS);
 
         injectedHTTPBackend.verifyNoOutstandingExpectation();
         injectedHTTPBackend.verifyNoOutstandingRequest(); // Extra assert to make sure we flush all backend requests
