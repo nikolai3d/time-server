@@ -35,9 +35,9 @@ function ntpDatePromise(iLocalClockService) {
         // http://www.ntp.org/ About NTP protocol
         // Or just google for "gps clock time server"
         const serverAddress = serverCarousel[gReq % serverCarousel.length];
-        console.log(`NTP Req ${gReq} start, Pinging ${serverAddress}`);
+        // console.log(`NTP Req ${gReq}: Pinging ${serverAddress}`);
 
-        const startedReq = gReq;
+        // const startedReq = gReq;
         gReq += 1;
         const localClockStart = iLocalClockService.Now();
 
@@ -51,7 +51,7 @@ function ntpDatePromise(iLocalClockService) {
         ntpClient.ntpReplyTimeout = 500;
         ntpClient.getNetworkTime(serverAddress, 123, (err, date) => {
 
-            console.log(`NTP Req ${startedReq} end, Received from ${serverAddress}`);
+            // console.log(`NTP Req ${startedReq} end, Received from ${serverAddress}`);
             gReqInProgress = false;
 
             if (err) {
