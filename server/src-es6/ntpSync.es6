@@ -1,11 +1,6 @@
 const ntpSingleRequest = require('./ntpSingleRequest');
 const ntpBurstRequest = require('./ntpBurstRequest');
 
-const LocalClock = {
-    Now: () => {
-        return Date.now();
-    }
-};
 /**
  * Creates a promise
  * @return {Promise} Promise that either resolves with an average number of milliseconds
@@ -13,7 +8,7 @@ const LocalClock = {
  */
 function ntpLocalClockDeltaPromise() {
     return new Promise((iResolve, iReject) => {
-        var burstDataPromise = ntpBurstRequest.ntpDatePromiseBurst(LocalClock, ntpSingleRequest.ntpDatePromise);
+        var burstDataPromise = ntpBurstRequest.ntpDatePromiseBurst(ntpSingleRequest.ntpDatePromise);
 
         burstDataPromise.then((iBurstDataArray) => {
 
