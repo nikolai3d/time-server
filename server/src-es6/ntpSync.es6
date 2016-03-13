@@ -1,4 +1,3 @@
-const ntpSingleRequest = require('./ntpSingleRequest');
 const ntpBurstRequest = require('./ntpBurstRequest');
 
 /**
@@ -11,15 +10,17 @@ function ntpLocalClockDeltaPromise() {
 
         // Sample Config Object
         const ntpBurstConfig = {
-            fLocalClockService: null,
             fServerCarousel: null,
             fTimeoutLatencyMS: null,
             fRequestedSuccessfulSampleCount: 15,
-            fBurstTimeoutMS: 6000
+            fBurstTimeoutMS: 5000,
+            // Advanced settings: connect custom services if needed
+            fSingleNTPRequestService: null,
+            fTimeoutService: null,
+            fLocalClockService: null
         };
 
-        const burstDataPromise = ntpBurstRequest.ntpDatePromiseBurstTimeout(ntpSingleRequest.ntpDatePromise,
-            ntpBurstConfig);
+        const burstDataPromise = ntpBurstRequest.ntpDatePromiseBurstTimeout(ntpBurstConfig);
 
         burstDataPromise.then((iBurstDataArray) => {
 

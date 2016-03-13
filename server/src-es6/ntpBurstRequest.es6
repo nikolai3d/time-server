@@ -1,6 +1,6 @@
 // Using a pattern described here: http: //stackoverflow.com/questions/17217736/while-loop-with-promises
 const Q = require("q");
-
+const ntpSingleRequest = require('./ntpSingleRequest');
 /**
  * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries
  * @param {NTPService} iNTPSingleRequestPromiseFunc: an asynchronous NTP ping. A function that
@@ -67,30 +67,36 @@ function ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc,
 /**
  * Creates a promise that resolves whenever iTimeMS milliseconds pass.
  * @param {Number} iTimeMS: Time To Pass.
+ * @param {Object} iTimeoutService: a wrapper for setTimeout
  * @return {Promise} Promise that resolves with nothing, after iTimeMS milliseconds after instantiation
  * NOTE: Promise does not reject.
  */
-function delay(iTimeMS) {
+function delay(iTimeMS, iTimeoutService) {
     return new Promise(function(iResolve) {
-        setTimeout(iResolve, iTimeMS);
+        iTimeoutService.setTimeout(iResolve, iTimeMS);
     });
 }
 
 const kDefaultRequestedSuccessfulSampleCount = 10;
 const kDefaultBurstTimeoutMS = 4000;
+const kDefaultTimeoutService = {
+    setTimeout: setTimeout /* Default Node.JS timeout */
+};
+
+const kDefaultSingleNTPRequestService = {
+    ntpDatePromise: ntpSingleRequest.ntpDatePromise
+};
+
 /**
  * Same as ntpDatePromiseBurst, but with added timeout for rejection.
  * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries, or
  * rejects if operation does not complete in the alloted time.
- * @param {NTPService} iNTPSingleRequestPromiseFunc: an asynchronous NTP ping. A function that
- * takes an optional config object (see ntpDatePromise() spec) and returns a promise that resolves
- * with NTP date or fails with an error.
  * @param {Object} iMultiNTPRequestConfig: an optional config object
  * @return {Promise} Promise that resolves with array of X elements of NTP dates , latencies and local times
  * after a successful completion of X NTP pings.
  * Promise rejects, rejects if the burst operation does not complete in the alloted time (iTimeoutMS milliseconds).
  */
-function ntpDatePromiseBurstTimeout(iNTPSingleRequestPromiseFunc, iMultiNTPRequestConfig) {
+function ntpDatePromiseBurstTimeout(iMultiNTPRequestConfig) {
 
     const singleRequestConfig = {
         fLocalClockService: iMultiNTPRequestConfig && iMultiNTPRequestConfig.fLocalClockService,
@@ -108,15 +114,24 @@ function ntpDatePromiseBurstTimeout(iNTPSingleRequestPromiseFunc, iMultiNTPReque
 
     const burstTimeoutMS = customBurstTimeoutMS || kDefaultBurstTimeoutMS;
 
-    const indefinitentpDatePromiseBurst = ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc,
-        singleRequestConfig,
-        requestedSuccessfulSampleCount);
-
     const throwTimeoutErrorFunc = () => {
         throw new Error('Operation timed out');
     };
 
-    return Promise.race([indefinitentpDatePromiseBurst, delay(burstTimeoutMS).then(throwTimeoutErrorFunc)]);
+    const customTimeoutService = iMultiNTPRequestConfig && iMultiNTPRequestConfig.fTimeoutService;
+
+    const timeoutService = customTimeoutService || kDefaultTimeoutService;
+
+    const customSingleNTPRequestService = iMultiNTPRequestConfig && iMultiNTPRequestConfig.fSingleNTPRequestService;
+
+    const singleNTPRequestService = customSingleNTPRequestService || kDefaultSingleNTPRequestService;
+
+    const indefinitentpDatePromiseBurst = ntpDatePromiseBurst(singleNTPRequestService.ntpDatePromise,
+        singleRequestConfig,
+        requestedSuccessfulSampleCount);
+
+    return Promise.race([indefinitentpDatePromiseBurst, delay(burstTimeoutMS, timeoutService).then(
+        throwTimeoutErrorFunc)]);
 }
 
 module.exports = {
