@@ -27,29 +27,31 @@ const kDefaultTimeoutLatencyMS = 500;
 
 /**
  * Creates a promise that resolves with an Date object after a successful NTP server query
- * @param {ClockService} iLocalClockService: an Object with a Now() function that returns
+ * @param {Object} iNTPSingleRequestConfig: Optional Custom Parameters containing:
+ * fLocalClockService: an Object with a Now() function that returns
  * current local time in Unix milliseconds. Usually just a wrapper for Date.now();
- * @param {Array} iServerCarousel: an Array of Strings, IP Addresses of a server pool
- * @param {Number} iTimeoutLatencyMS: a timeout in milliseconds, when to bail on an NTP request
- * and move on to next server
+ * fServerCarousel: an Array of Strings, IP Addresses of a server pool
+ * fTimeoutLatencyMS: a timeout in milliseconds, when to bail on an NTP request
  * @return {Promise} Promise that either resolves with successful Date object or an NTP server communication
  * error
  */
-function ntpDatePromise(iRunCount,
-    iLocalClockService,
-    iServerCarousel,
-    iTimeoutLatencyMS) {
+function ntpDatePromise(iNTPSingleRequestConfig) {
+
+    const customClockService = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fLocalClockService;
+    const customServerCarousel = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fServerCarousel;
+    const customTimeoutLatencyMS = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutLatencyMS;
+
     // TIME-server query via ntp: https://github.com/moonpyk/node-ntp-client
-    const clockService = iLocalClockService || kDefaultLocalClockService;
-    const serverCarousel = iServerCarousel || kDefaultServerCarousel;
-    const timeoutLatency = iTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
+    const clockService = customClockService || kDefaultLocalClockService;
+    const serverCarousel = customServerCarousel || kDefaultServerCarousel;
+    const timeoutLatency = customTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
 
     return new Promise((iResolveFunc, iRejectFunc) => {
 
         // See http://www.pool.ntp.org/en/ for usage information
         // http://www.ntp.org/ About NTP protocol
         // Or just google for "gps clock time server"
-        const serverAddress = serverCarousel[iRunCount % serverCarousel.length];
+        const serverAddress = serverCarousel[gReq % serverCarousel.length];
         // console.log(`NTP Req ${gReq}: Pinging ${serverAddress}`);
 
         // const startedReq = gReq;

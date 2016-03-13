@@ -8,9 +8,18 @@ const ntpBurstRequest = require('./ntpBurstRequest');
  */
 function ntpLocalClockDeltaPromise() {
     return new Promise((iResolve, iReject) => {
-        // var burstDataPromise = ntpBurstRequest.ntpDatePromiseBurst(ntpSingleRequest.ntpDatePromise);
+
+        // Sample Config Object
+        const ntpBurstConfig = {
+            fLocalClockService: null,
+            fServerCarousel: null,
+            fTimeoutLatencyMS: null,
+            fRequestedSuccessfulSampleCount: 15,
+            fBurstTimeoutMS: 6000
+        };
+
         const burstDataPromise = ntpBurstRequest.ntpDatePromiseBurstTimeout(ntpSingleRequest.ntpDatePromise,
-            3000);
+            ntpBurstConfig);
 
         burstDataPromise.then((iBurstDataArray) => {
 
