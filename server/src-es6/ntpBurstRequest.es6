@@ -1,65 +1,27 @@
-const delay = require('delay');
+// Using a pattern described here: http: //stackoverflow.com/questions/17217736/while-loop-with-promises
+const Q = require("q");
 
 /**
  * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries
- * @param {ClockService} iLocalClockService: an Object with a Now() function that returns
- * current local time in Unix milliseconds. Usually just a wrapper for Date.now();
- * @param {NTPService} iNTPSingleRequestPromiseFunc: an Object with a Now() function that returns
- * current local time in Unix milliseconds. Usually just a wrapper for Date.now();
- * @return {Promise} Promise that either resolves with  array of NTP dates, latencies and local times
- * or an NTP server communication
- * error
+ * @param {NTPService} iNTPSingleRequestPromiseFunc: an asynchronous NTP ping. A function that
+ * takes an integer (to calculate which server to ping)
+ * and returns a promise that resolves with NTP date or fails with an error.
+ * @return {Promise} Promise that resolves with array of X elements of NTP dates , latencies and local times
+ * after a successful completion of X NTP pings.
+ * NOTE: Promise does not reject/fail, its inner function runs indefinitely until successful NTP pings are completed.
  */
-// function ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc) {
-//
-//     return new Promise((iResolve, iReject) => {
-//         var burstArray = [];
-//         var p = Promise.resolve();
-//         for (let i = 0; i < 6; i += 1) {
-//             // Chain the promises interleaved with the 'delay' passthrough promise, that resolves after X ms
-//             // https://github.com/sindresorhus/delay
-//             p = p
-//                 .then(delay(10))
-//                 .then((iRes) => {
-//                     if (typeof iRes !== 'undefined' && iRes !== null) {
-//                         burstArray.push(iRes);
-//                     }
-//                     console.log(
-//                         `OK ${burstArray.length} samples so far`);
-//                     return iNTPSingleRequestPromiseFunc();
-//                 }).catch(( /* err */ ) => {
-//                     console.log(
-//                         `ERR ${burstArray.length} samples so far`);
-//                     return iNTPSingleRequestPromiseFunc();
-//                 });
-//         }
-//
-//         p.then((iRes) => {
-//             if (typeof iRes !== 'undefined' && iRes !== null) {
-//                 burstArray.push(iRes);
-//             }
-//             console.log(
-//                 `OK ${burstArray.length} samples in the end`);
-//             iResolve(burstArray);
-//         }).catch((err) => {
-//             console.log("Last chain link Timeout, moving on! " + err);
-//             console.log(
-//                 `ERR ${burstArray.length} samples in the end`);
-//             iResolve(burstArray);
-//         });
-//
-//     });
-// }
-const Q = require("q");
-
 function ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc) {
-    var done = Q.defer();
+    var deferred = Q.defer();
 
     let counter = 0;
     let burstArray = [];
-    const body = () => {
-        return new Promise((iResolve, iReject) => {
+    const singleNTPRequest = () => {
+        return new Promise((iResolve /* , iReject */ ) => {
 
+            // This inner Promise function does not reject any promises, nor does it resolve with any data.
+            // When an NTP request completes, if successful, the result is added to burstArray.
+            // the iResolve() callback is only used to signal the outer mechanism
+            // (see below) that the operation is complete.
             console.log("counter : " + counter);
             counter += 1;
 
@@ -77,31 +39,65 @@ function ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc) {
         });
     };
 
-    const condition = () => {
+    const needMoreNTPRequests = () => {
         return burstArray.length < 10;
     };
 
-    function loop() {
-        // When the result of calling `condition` is no longer true, we are
+    const loop = () => {
+        // When the result of calling `needMoreNTPRequests` is no longer true, we are
         // done.
-        if (!condition()) {
-            return done.resolve(["DONE!"]);
+        if (!needMoreNTPRequests()) {
+            return deferred.resolve(burstArray);
         }
         // Use `when`, in case `body` does not return a promise.
         // When it completes loop again otherwise, if it fails, reject the
         // done promise
-        Q.when(body(), loop, done.reject);
-    }
+        Q.when(singleNTPRequest(), loop, deferred.reject);
+    };
 
     // Start running the loop in the next tick so that this function is
-    // completely async. It would be unexpected if `body` was called
+    // completely async. It would be unexpected if `singleNTPRequest` was called
     // synchronously the first time.
     Q.nextTick(loop);
 
-    // The promise
-    return done.promise;
+    // The promise is returned
+    return deferred.promise;
+}
+/**
+ * Creates a promise that resolves whenever iTimeMS milliseconds pass.
+ * @param {Number} iTimeMS: Time To Pass.
+ * @return {Promise} Promise that resolves with nothing, after iTimeMS milliseconds after instantiation
+ * NOTE: Promise does not reject.
+ */
+function delay(iTimeMS) {
+    return new Promise(function(iResolve) {
+        setTimeout(iResolve, iTimeMS);
+    });
+}
+/**
+ * Same as ntpDatePromiseBurst, but with added timeout for rejection.
+ * Creates a promise that resolves with an Date object after a successful burst of X NTP server queries, or
+ * rejects if operation does not complete in the alloted time.
+ * @param {NTPService} iNTPSingleRequestPromiseFunc: an asynchronous NTP ping. A function that
+ * takes an integer (to calculate which server to ping)
+ * and returns a promise that resolves with NTP date or fails with an error.
+ * @param {Number} iTimeoutMS: a timeout, to reject the burst if iTimeoutMS elapses
+ * @return {Promise} Promise that resolves with array of X elements of NTP dates , latencies and local times
+ * after a successful completion of X NTP pings.
+ * Promise rejects, rejects if the burst operation does not complete in the alloted time (iTimeoutMS milliseconds).
+ */
+function ntpDatePromiseBurstTimeout(iNTPSingleRequestPromiseFunc, iTimeoutMS) {
+
+    const indefinitentpDatePromiseBurst = ntpDatePromiseBurst(iNTPSingleRequestPromiseFunc);
+
+    const throwTimeoutErrorFunc = () => {
+        throw new Error('Operation timed out');
+    };
+
+    return Promise.race([indefinitentpDatePromiseBurst, delay(iTimeoutMS).then(throwTimeoutErrorFunc)]);
 }
 
 module.exports = {
-    ntpDatePromiseBurst
+    ntpDatePromiseBurst,
+    ntpDatePromiseBurstTimeout
 };

@@ -8,7 +8,9 @@ const ntpBurstRequest = require('./ntpBurstRequest');
  */
 function ntpLocalClockDeltaPromise() {
     return new Promise((iResolve, iReject) => {
-        var burstDataPromise = ntpBurstRequest.ntpDatePromiseBurst(ntpSingleRequest.ntpDatePromise);
+        // var burstDataPromise = ntpBurstRequest.ntpDatePromiseBurst(ntpSingleRequest.ntpDatePromise);
+        const burstDataPromise = ntpBurstRequest.ntpDatePromiseBurstTimeout(ntpSingleRequest.ntpDatePromise,
+            3000);
 
         burstDataPromise.then((iBurstDataArray) => {
 
