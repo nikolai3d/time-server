@@ -1,4 +1,4 @@
-var ntpsync = require('./ntpSync');
+var ntpsync = require('ntpsync');
 
 /**
  * A class that requests NTP time every 10 seconds
@@ -27,6 +27,8 @@ class Chronos {
             this.fDeltaData.fServerNTPDelta = iNTPData.minimalNTPLatencyDelta;
             this.fDeltaData.fServerNTPLatency = iNTPData.minimalNTPLatency;
             this.fDeltaData.fSampleCount = iNTPData.totalSampleCount;
+
+            console.log(JSON.stringify(iNTPData));
         }).catch((err) => {
             console.log(err);
         });
