@@ -283,10 +283,9 @@ describe('TimeSyncController Initial Server Synchronization', function() {
 
         var sampleServerResponse = {
             "fDeltaData": {
-                "fLastServerNTPDelta": 15,
-                "fAverageServerNTPDelta": 15.333333333333334,
-                "fSampleCount": 3,
-                "fServerTimeMS": 1456284825334
+                "fServerNTPDelta": 60000,
+                "fServerNTPLatency": 20,
+                "fSampleCount": 3
             }
         };
 
@@ -299,9 +298,12 @@ describe('TimeSyncController Initial Server Synchronization', function() {
         expect(timeSyncController.fTC.fServerData).toBeDefined();
         expect(timeSyncController.fTC.fServerData).not.toEqual([]);
         expect(timeSyncController.fTC.fServerData.fDeltaData).toBeDefined();
-        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerTimeMS).toBeDefined();
-        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerTimeMS).toEqual(
-            1456284825334);
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toBeDefined();
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toEqual(
+            60000);
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPLatency).toBeDefined();
+        expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPLatency).toEqual(
+            20);
     });
 
     // var codeArray = [300, 400, 404, 451, 501, 502, 500];
@@ -394,12 +396,10 @@ describe('Send/Receive NTP Sockets, Timing Calculation Checks', function() {
 
         var sampleServerResponse = {
             "fDeltaData": {
-                "fLastServerNTPDelta": mockServerNTPDelta,
-                "fAverageServerNTPDelta": mockServerNTPDelta,
-                "fSampleCount": 1,
-                "fServerTimeMS": serverTimeMS
+                "fServerNTPDelta": mockServerNTPDelta,
+                "fServerNTPLatency": 20,
+                "fSampleCount": 3
             }
-            // fServerTimeMS is not really needed, since SocketNTPSync will do its own calculations.
         };
 
         injectedHTTPBackend.whenGET(synchronizeURLValidator).respond(function() {
