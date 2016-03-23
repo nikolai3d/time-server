@@ -68,7 +68,7 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
             // const kDefaultTimeoutLatencyMS = 500;
             // const timeoutLatency = customTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
 
-            return new Promise((iResolveFunc, iRejectFunc) => {
+            const ourNTPDatePromise = new Promise((iResolveFunc, iRejectFunc) => {
                 untimedNTPPingPromise(iSocket, iAsyncService, clockService)
                     .then((iData) => {
                         console.log(JSON.stringify(iData));
@@ -78,6 +78,8 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
                         iRejectFunc(iError);
                     });
             });
+
+            return ourNTPDatePromise;
         }
     };
 }
