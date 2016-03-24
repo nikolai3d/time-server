@@ -1,5 +1,4 @@
 /* global gApp */
-/* global window */
 /**
  * Creates a promise that resolves whenever iTimeMS milliseconds pass.
  * @param {Number} iTimeMS: Time To Pass.
@@ -22,10 +21,12 @@
  * running on server side.
  * @param {Service} iAsyncService: Deferred Instance Promise Provider
  * (e.g. $q in Angular https://docs.angularjs.org/api/ng/service/$q )
+ * @param {Service} iTimeoutService: Timeout Instance Promise Provider
+ * (e.g. $timeout in Angular https://docs.angularjs.org/api/ng/service/$timeout )
  * @return {Promise} Promise that either resolves with successful {offset, latency} object or a server communication
  * error
  */
-function getSocketPingPromiseService(iSocket, iAsyncService) {
+function getSocketPingPromiseService(iSocket, iAsyncService, iTimeoutService) {
 
     const timedNTPPingPromise = (iSocket, iAsyncService, iLocalClockService, iTimeoutService, iTimeoutMS) => {
         const deferred = iAsyncService.defer();
@@ -54,7 +55,7 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
             deferred.resolve(pingSample);
         });
 
-        window.setTimeout(() => {
+        iTimeoutService.setTimeout(() => {
             deferred.reject(`Timeout ${iTimeoutMS} ms elapsed`);
         }, iTimeoutMS);
 
@@ -79,7 +80,7 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
 
             const customTimeoutService = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutService;
             const kDefaultTimeoutService = {
-                setTimeout: window.setTimeout
+                setTimeout: iTimeoutService
             };
             const timeoutService = customTimeoutService || kDefaultTimeoutService;
 
@@ -145,8 +146,8 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
 // windowIOSocket is the socket produced by window.io.connect
 // ("bower_components/socket.io/socket.io.js" dependency)
 
-gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
-    function(mySocket, $rootScope, $interval, $q) {
+gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q', '$timeout',
+    function(mySocket, $rootScope, $interval, $q, iTimeoutService) {
 
         const socket = mySocket;
 
@@ -168,7 +169,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
         // const kMaxSampleCount = 20;
         const kSampleDelayMS = 1000;
 
-        const socketPingPromise = getSocketPingPromiseService(socket, $q).ntpDatePromise;
+        const socketPingPromise = getSocketPingPromiseService(socket, $q, iTimeoutService).ntpDatePromise;
 
         class NTP {
             constructor() {
