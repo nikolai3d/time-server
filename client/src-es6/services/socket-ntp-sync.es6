@@ -1,11 +1,18 @@
 /* global gApp */
-
+/* global window */
+/**
+ * Creates a promise that resolves whenever iTimeMS milliseconds pass.
+ * @param {Number} iTimeMS: Time To Pass.
+ * @param {Object} iTimeoutService: a wrapper for setTimeout
+ * @return {Promise} Promise that resolves with nothing, after iTimeMS milliseconds after instantiation
+ * NOTE: Promise does not reject.
+ */
 // function delay(iTimeMS, iTimeoutService) {
 //     return new Promise(function(iResolve) {
 //         iTimeoutService.setTimeout(iResolve, iTimeMS);
 //     });
 // }
-
+//
 // const throwTimeoutErrorFunc = () => {
 //     throw new Error('Operation timed out');
 // };
@@ -20,7 +27,7 @@
  */
 function getSocketPingPromiseService(iSocket, iAsyncService) {
 
-    const untimedNTPPingPromise = (iSocket, iAsyncService, iLocalClockService) => {
+    const timedNTPPingPromise = (iSocket, iAsyncService, iLocalClockService, iTimeoutService, iTimeoutMS) => {
         const deferred = iAsyncService.defer();
 
         iSocket.emit('ntp:client_sync', {
@@ -47,6 +54,10 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
             deferred.resolve(pingSample);
         });
 
+        window.setTimeout(() => {
+            deferred.reject(`Timeout ${iTimeoutMS} ms elapsed`);
+        }, iTimeoutMS);
+
         return deferred.promise;
     };
 
@@ -66,12 +77,19 @@ function getSocketPingPromiseService(iSocket, iAsyncService) {
 
             const clockService = customClockService || kDefaultLocalClockService;
 
-            // const customTimeoutLatencyMS = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutLatencyMS;
-            // const kDefaultTimeoutLatencyMS = 500;
-            // const timeoutLatency = customTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
+            const customTimeoutService = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutService;
+            const kDefaultTimeoutService = {
+                setTimeout: window.setTimeout
+            };
+            const timeoutService = customTimeoutService || kDefaultTimeoutService;
+
+            const customTimeoutLatencyMS = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutLatencyMS;
+            const kDefaultTimeoutLatencyMS = 100;
+            const timeoutLatency = customTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
 
             const ourNTPDatePromise = new Promise((iResolveFunc, iRejectFunc) => {
-                untimedNTPPingPromise(iSocket, iAsyncService, clockService)
+                timedNTPPingPromise(iSocket, iAsyncService, clockService, timeoutService,
+                        timeoutLatency)
                     .then((iData) => {
                         console.log(JSON.stringify(iData));
                         iResolveFunc(iData);
@@ -166,8 +184,8 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
                     // if (this.fPingSamples.length > kMaxSampleCount) {
                     //     this.fPingSamples.pop();
                     // }
-                }).catch(function() {
-
+                }).catch(function(err) {
+                    console.log(`ERROR: ${err}`);
                 });
             } /* doThePing */
 
