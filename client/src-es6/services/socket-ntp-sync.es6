@@ -66,7 +66,7 @@ function getSocketPingPromiseService(iSocket, iAsyncService, iTimeoutService) {
                 timedNTPPingPromise(iSocket, iAsyncService, clockService, timeoutService,
                         timeoutLatency)
                     .then((iData) => {
-                        console.log(JSON.stringify(iData));
+                        // console.log(JSON.stringify(iData));
                         iResolveFunc(iData);
                     })
                     .catch((iError) => {
@@ -143,7 +143,13 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q', 
             startPinging() {
                 // Set up an interval and cancel it once rootScope is going down
 
-                const kSampleDelayMS = 1000;
+                const kSampleDelayMS = 10000;
+
+                // this.doThePing();
+
+                iTimeoutService(() => {
+                    this.doThePing();
+                }, 100);
 
                 // Send the ping every kSampleDelayMS ms
                 let intervalHandler = $interval(() => {
