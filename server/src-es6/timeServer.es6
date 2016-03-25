@@ -18,7 +18,7 @@ class Chronos {
 
         this.TickInterval = setInterval(() => {
             this.Synchronize();
-        }, 5000);
+        }, 30000);
     }
 
     Synchronize() {
@@ -45,7 +45,7 @@ const keeper = new Chronos();
  * @param {Function} next: standard Express next() handler
  */
 function timeServerEndpointHandler(iReq, iResponse, next) {
-    console.log("doSynchronize Request");
+    console.log(`doSynchronize Request from client: Delta is ${keeper.fDeltaData.fServerNTPDelta} ms`);
 
     var result = {
         fDeltaData: keeper.fDeltaData

@@ -1,48 +1,95 @@
 /* global gApp */
 
+
+const kDefaultNTPPingTimeoutLatencyMS = 100; // Timeout value for calculating Client <-> Server NTP delta
+const kNTPPingIntervalMS = 10000; // How often we request server for to calculate Client <-> Server NTP delta
+
 /**
  * Creates the promise that resolves with an {offset, latency} object after a successful server ping
  * @param {Socket} iSocket: a socket.io socket that's used to connect to https://www.npmjs.com/package/socket-ntp
  * running on server side.
  * @param {Service} iAsyncService: Deferred Instance Promise Provider
  * (e.g. $q in Angular https://docs.angularjs.org/api/ng/service/$q )
+ * @param {Service} iTimeoutService: Timeout Instance Promise Provider
+ * (e.g. $timeout in Angular https://docs.angularjs.org/api/ng/service/$timeout )
  * @return {Promise} Promise that either resolves with successful {offset, latency} object or a server communication
  * error
  */
-function socketPingPromise(iSocket, iAsyncService) {
-    const deferred = iAsyncService.defer();
+function getSocketPingPromiseService(iSocket, iAsyncService, iTimeoutService) {
 
-    iSocket.emit('ntp:client_sync', {
-        t0: Date.now()
-    });
+    const timedNTPPingPromise = (iSocket, iAsyncService, iLocalClockService, iTimeoutService, iTimeoutMS) => {
+        const deferred = iAsyncService.defer();
 
-    iSocket.on('ntp:server_sync', (iReturnedServerData) => {
-        const nowTime = iReturnedServerData.t0; // Date.now(); // Shameless plug to allow unit tests to work.
-        const latency = nowTime - iReturnedServerData.t0;
-        // When the packet got sent back, t1 was time on server
-        // Since then, the time of latency/2 (approximate) has passed
-        const predictedNowTimeOnServer =
-            iReturnedServerData.t1 + (latency * 0.5);
-        const diff = nowTime - predictedNowTimeOnServer;
+        iSocket.emit('ntp:client_sync', {
+            t0: iLocalClockService.Now()
+        });
 
-        const pingSample = {
-            fOffset: diff,
-            fLatency: latency
-        };
+        iSocket.on('ntp:server_sync', (iReturnedServerData) => {
+            const nowTime = iLocalClockService.Now();
+            const latency = nowTime - iReturnedServerData.t0;
 
-        deferred.resolve(pingSample);
-    });
+            const pingSample = {
+                localClockNow: nowTime,
+                ntpRaw: iReturnedServerData.t1,
+                ntpLatency: latency
+            };
 
-    return deferred.promise;
-} /* socketPingPromise() */
+            deferred.resolve(pingSample);
+        });
+
+        iTimeoutService.setTimeout(() => {
+            deferred.reject(`Timeout ${iTimeoutMS} ms elapsed`);
+        }, iTimeoutMS);
+
+        return deferred.promise;
+    };
+
+    return {
+        ntpDatePromise: (iNTPSingleRequestConfig) => {
+            const customClockService = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fLocalClockService;
+
+            const kDefaultLocalClockService = {
+                Now: () => {
+                    return Date.now();
+                }
+            };
+
+            const clockService = customClockService || kDefaultLocalClockService;
+
+            const customTimeoutService = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutService;
+            const kDefaultTimeoutService = {
+                setTimeout: iTimeoutService
+            };
+            const timeoutService = customTimeoutService || kDefaultTimeoutService;
+
+            const customTimeoutLatencyMS = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutLatencyMS;
+
+            const timeoutLatency = customTimeoutLatencyMS || kDefaultNTPPingTimeoutLatencyMS;
+
+            const ourNTPDatePromise = new Promise((iResolveFunc, iRejectFunc) => {
+                timedNTPPingPromise(iSocket, iAsyncService, clockService, timeoutService,
+                        timeoutLatency)
+                    .then((iData) => {
+                        // console.log(JSON.stringify(iData));
+                        iResolveFunc(iData);
+                    })
+                    .catch((iError) => {
+                        iRejectFunc(iError);
+                    });
+            });
+
+            return ourNTPDatePromise;
+        }
+    };
+}
 
 // 'BtfordSocket' is the socket produced by https://github.com/btford/angular-socket-io
 // ("bower_components/angular-socket-io/socket.min.js" dependency)
 // windowIOSocket is the socket produced by window.io.connect
 // ("bower_components/socket.io/socket.io.js" dependency)
 
-gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
-    function(mySocket, $rootScope, $interval, $q) {
+gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q', '$timeout',
+    function(mySocket, $rootScope, $interval, $q, iTimeoutService) {
 
         const socket = mySocket;
 
@@ -61,59 +108,53 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q',
         // NTP protocol is based on ntp.js in https://github.com/calvinfo/socket-ntp
         // Requires https://www.npmjs.com/package/socket-ntp to be installed and running on the server side
 
-        const kMaxSampleCount = 20;
-        const kSampleDelayMS = 1000;
+        // const kMaxSampleCount = 20;
+
+        const socketPingPromise = getSocketPingPromiseService(socket, $q, iTimeoutService).ntpDatePromise;
 
         class NTP {
             constructor() {
-                this.fPingSamples = [];
+                this.fPingSample = null;
                 this.startPinging();
             } /* constructor */
 
             doThePing() {
 
                 socketPingPromise(socket, $q).then((iPingSample) => {
-                    this.fPingSamples.unshift(iPingSample);
-
-                    if (this.fPingSamples.length > kMaxSampleCount) {
-                        this.fPingSamples.pop();
-                    }
-                }).catch(function() {
-
+                    this.fPingSample = iPingSample;
+                }).catch(function(err) {
+                    console.log(`ERROR: ${err}`);
                 });
             } /* doThePing */
 
             getOffsetLatency() {
 
-                if (this.fPingSamples.length === 0) {
+                if (this.fPingSample === null) {
                     return null;
                 }
 
-                let averageOffset = 0.0;
-                let averageLatency = 0.0;
-
-                for (let i = 0; i < this.fPingSamples.length; i += 1) {
-                    averageOffset += this.fPingSamples[i].fOffset;
-                    averageLatency += this.fPingSamples[i].fLatency;
-                }
-
-                averageOffset /= this.fPingSamples.length;
-                averageLatency /= this.fPingSamples.length;
-
+                const ntpTimestampApproximation =
+                    this.fPingSample.ntpRaw + this.fPingSample.ntpLatency * 0.5;
+                const clockOffsetMS = this.fPingSample.localClockNow - ntpTimestampApproximation;
+                const ntpPingLatencyMS = this.fPingSample.ntpLatency;
                 return {
-                    fAverageOffset: averageOffset,
-                    fAverageLatency: averageLatency,
-                    fNumberOfSamples: this.fPingSamples.length
+                    fAverageOffset: clockOffsetMS,
+                    fAverageLatency: ntpPingLatencyMS,
+                    fNumberOfSamples: 1
                 };
             } /* getOffsetLatency */
 
             startPinging() {
                 // Set up an interval and cancel it once rootScope is going down
 
+                iTimeoutService(() => {
+                    this.doThePing();
+                }, 100);
+
                 // Send the ping every kSampleDelayMS ms
                 let intervalHandler = $interval(() => {
                     this.doThePing();
-                }, kSampleDelayMS);
+                }, kNTPPingIntervalMS);
 
                 $rootScope.stopNTPPings = () => {
                     if (angular.isDefined(intervalHandler)) {
