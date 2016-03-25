@@ -1,5 +1,7 @@
 /* global gApp */
 
+const kHeartBeatFrequencyMS = 10; // How often we update the screen, pretty much
+const kServerNTPDeltaRequestFrequencyMS = 15000; // How often we request server for its Server <-> NTP delta
 /**
  * AngularInstallIntervalFunction() Attaches An Interval to fire every time each iIntervalTimeMS,
  * and makes sure it's destroyed when the scope goes down
@@ -39,28 +41,25 @@ class TimeController {
         this.fClockService = iClockService;
         this.fSocketNTPSyncService = iSocketNTPSyncService;
 
-        this.fServerData = [];
+        this.fServerData = null;
         this.fTitle = "UberTimeSync";
         this.fStringData = "No Data";
         this.fClientData = null;
-        this.fServerErrorResponse = null;
+        this.fLastServerErrorResponse = null;
         this.fRealTimeSyncCount = 0;
 
         this.clientToServerTimeSync();
 
         AngularInstallIntervalFunction(() => {
             this.heartBeat();
-        }, 10, iIntervalService, iScope);
+        }, kHeartBeatFrequencyMS, iIntervalService, iScope);
 
+        AngularInstallIntervalFunction(() => {
+            this.clientToServerTimeSync();
+        }, kServerNTPDeltaRequestFrequencyMS, iIntervalService, iScope);
     }
 
     heartBeat() {
-        var clientNow = this.fClockService.Now();
-
-        this.fClientData = {
-            fSystemTime: clientNow,
-            fMostPreciseTime: clientNow
-        };
 
         this.fSocketNTPData = this.fSocketNTPSyncService.getOffsetAndLatency();
         if (this.fSocketNTPData === null) {
@@ -72,6 +71,32 @@ class TimeController {
         }
 
         this.fRealTimeSyncCount += 1.0;
+
+        const clientNow = this.fClockService.Now();
+        const adjustedClientNow = this.TrueNowTimeMS();
+        this.fClientData = {
+            fSystemTime: clientNow,
+            fMostPreciseTime: adjustedClientNow
+        };
+    }
+
+    clientToServerTimeSync() {
+        var timeRequest = this.fHTTPService({
+            method: 'GET',
+            url: '/getNTPSyncData'
+        });
+
+        timeRequest
+            .then((response) => {
+                this.fServerData = response.data;
+                this.fClientData = {
+                    fSystemTime: null,
+                    fAdjustedSystemTime: null
+                };
+                this.fStringData = JSON.stringify(this.fServerData);
+            }).catch((response) => {
+                this.fLastServerErrorResponse = response;
+            });
     }
 
     TrueNowTimeMS() {
@@ -91,26 +116,6 @@ class TimeController {
         var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
 
         return calculatedNowTime;
-    }
-
-    clientToServerTimeSync() {
-        var timeRequest = this.fHTTPService({
-            method: 'GET',
-            url: '/getNTPSyncData'
-        });
-
-        timeRequest
-            .then((response) => {
-                this.fServerData = response.data;
-                this.fClientData = {
-                    fSystemTime: null,
-                    fAdjustedSystemTime: null
-                };
-                this.fStringData = JSON.stringify(this.fServerData);
-            }).catch((response) => {
-                this.fServerData = "Server Communication Error";
-                this.fServerErrorResponse = response;
-            });
     }
 
 }

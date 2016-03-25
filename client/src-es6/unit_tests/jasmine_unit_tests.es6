@@ -159,7 +159,7 @@ describe('TimeSyncController Empty Server Communication', function() {
         expect(tsController.fTC.fClientData).toBe(null);
         // And Server Data is Empty
         expect(tsController.fTC.fServerData).toBeDefined();
-        expect(tsController.fTC.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toEqual(null);
 
         injectedIntervalService.flush(5000);
         // After 5 seconds, the clientData should not be NULL since some local time sampling did occur
@@ -173,7 +173,7 @@ describe('TimeSyncController Empty Server Communication', function() {
 
         // However, since we are not flushing backend here, fServerData is still the same, empty
         expect(tsController.fTC.fServerData).toBeDefined();
-        expect(tsController.fTC.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toEqual(null);
 
     });
 
@@ -198,7 +198,7 @@ describe('TimeSyncController Empty Server Communication', function() {
         expect(tsController.fTC.fClientData).toBe(null);
         // And Server Data is Empty
         expect(tsController.fTC.fServerData).toBeDefined();
-        expect(tsController.fTC.fServerData).toEqual([]);
+        expect(tsController.fTC.fServerData).toEqual(null);
 
         //
         var calls = $intervalSpy.calls.all();
@@ -296,7 +296,7 @@ describe('TimeSyncController Initial Server Synchronization', function() {
         //    injectedHTTPBackend.expectGET(urlValidator).respond(sampleServerResponse);
         expect(injectedHTTPBackend.flush).not.toThrow();
         expect(timeSyncController.fTC.fServerData).toBeDefined();
-        expect(timeSyncController.fTC.fServerData).not.toEqual([]);
+        expect(timeSyncController.fTC.fServerData).not.toEqual(null);
         expect(timeSyncController.fTC.fServerData.fDeltaData).toBeDefined();
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toBeDefined();
         expect(timeSyncController.fTC.fServerData.fDeltaData.fServerNTPDelta).toEqual(
@@ -319,12 +319,9 @@ describe('TimeSyncController Initial Server Synchronization', function() {
 
         injectedHTTPBackend.expectGET(synchronizeURLValidator).respond(501);
         expect(injectedHTTPBackend.flush).not.toThrow();
-        expect(timeSyncController.fTC.fServerData).toBeDefined();
-        expect(timeSyncController.fTC.fServerData).not.toEqual([]);
-        expect(timeSyncController.fTC.fServerData).toEqual("Server Communication Error");
-        expect(timeSyncController.fTC.fServerErrorResponse).toBeDefined();
-        expect(timeSyncController.fTC.fServerErrorResponse.status).toBeDefined();
-        expect(timeSyncController.fTC.fServerErrorResponse.status).toEqual(501);
+        expect(timeSyncController.fTC.fLastServerErrorResponse).toBeDefined();
+        expect(timeSyncController.fTC.fLastServerErrorResponse.status).toBeDefined();
+        expect(timeSyncController.fTC.fLastServerErrorResponse.status).toEqual(501);
     });
 
 });

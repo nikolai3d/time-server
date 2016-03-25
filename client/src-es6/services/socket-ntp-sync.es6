@@ -1,5 +1,9 @@
 /* global gApp */
 
+
+const kDefaultNTPPingTimeoutLatencyMS = 100; // Timeout value for calculating Client <-> Server NTP delta
+const kNTPPingIntervalMS = 10000; // How often we request server for to calculate Client <-> Server NTP delta
+
 /**
  * Creates the promise that resolves with an {offset, latency} object after a successful server ping
  * @param {Socket} iSocket: a socket.io socket that's used to connect to https://www.npmjs.com/package/socket-ntp
@@ -59,8 +63,8 @@ function getSocketPingPromiseService(iSocket, iAsyncService, iTimeoutService) {
             const timeoutService = customTimeoutService || kDefaultTimeoutService;
 
             const customTimeoutLatencyMS = iNTPSingleRequestConfig && iNTPSingleRequestConfig.fTimeoutLatencyMS;
-            const kDefaultTimeoutLatencyMS = 100;
-            const timeoutLatency = customTimeoutLatencyMS || kDefaultTimeoutLatencyMS;
+
+            const timeoutLatency = customTimeoutLatencyMS || kDefaultNTPPingTimeoutLatencyMS;
 
             const ourNTPDatePromise = new Promise((iResolveFunc, iRejectFunc) => {
                 timedNTPPingPromise(iSocket, iAsyncService, clockService, timeoutService,
@@ -143,10 +147,6 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q', 
             startPinging() {
                 // Set up an interval and cancel it once rootScope is going down
 
-                const kSampleDelayMS = 10000;
-
-                // this.doThePing();
-
                 iTimeoutService(() => {
                     this.doThePing();
                 }, 100);
@@ -154,7 +154,7 @@ gApp.factory('SocketNTPSync', ['BtfordSocket', '$rootScope', '$interval', '$q', 
                 // Send the ping every kSampleDelayMS ms
                 let intervalHandler = $interval(() => {
                     this.doThePing();
-                }, kSampleDelayMS);
+                }, kNTPPingIntervalMS);
 
                 $rootScope.stopNTPPings = () => {
                     if (angular.isDefined(intervalHandler)) {
