@@ -43,10 +43,10 @@
           <div class="column">
             <div class="ui stacked segment">
               <p>Controller name:
-                {{timer.fTC.fTitle}}</p>
+                {{}}</p>
 
               <p>Controller data:
-                {{timer.fTC.fStringData}}</p>
+                {{}}</p>
             </div>
           </div>
           <div class="column">
@@ -55,11 +55,11 @@
                 <div class="ui stacked segment">
                   <div class="ui segment red">
                     <p>Minimal delta (MS):
-                      {{timer.fTC.fServerData.fDeltaData.fServerNTPDelta}}</p>
+                      {{}}</p>
                   </div>
                   <div class="ui segment blue">
                     <p>Minimal Latency MS:
-                      {{timer.fTC.fServerData.fDeltaData.fServerNTPLatency}}</p>
+                      {{}}</p>
                   </div>
                 </div>
               </div>
@@ -71,11 +71,11 @@
                 <div class="ui stacked segment">
                   <div class="ui segment orange">
                     <p>Local Time:
-                      {{timer.fTC.fClientData.fSystemTime}}</p>
+                      {{timer.fClientData.fSystemTime}}</p>
                   </div>
                   <div class="ui segment orange">
                     <p>Most Precise Local Time:
-                      {{timer.fTC.fClientData.fMostPreciseTime}}</p>
+                      {{timer.fClientData.fMostPreciseTime}}</p>
                   </div>
                 </div>
               </div>
@@ -87,14 +87,14 @@
                 <div class="ui stacked segment">
                   <div class="ui segment red">
                     <p>Socket NTP offset:
-                      {{timer.fTC.fSocketNTPData.fAverageOffset}}
-                      ms ({{timer.fTC.fSocketNTPData.fNumberOfSamples}}
+                      {{}}
+                      ms ({{}}
                       samples)</p>
                   </div>
                   <div class="ui segment red">
                     <p>Socket NTP latency:
-                      {{timer.fTC.fSocketNTPData.fAverageLatency}}
-                      ms ({{timer.fTC.fSocketNTPData.fNumberOfSamples}}
+                      {{}}
+                      ms ({{}}
                       samples)</p>
                   </div>
                 </div>

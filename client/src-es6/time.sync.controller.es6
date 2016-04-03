@@ -1,74 +1,15 @@
 /* global gApp */
 /* global AngularInstallIntervalFunction */
 const kHeartBeatFrequencyMS = 10; // How often we update the screen, pretty much
-const kServerNTPDeltaRequestFrequencyMS = 15000; // How often we request server for its Server <-> NTP delta
 
-class TimeController {
-    constructor(iHTTPService, iIntervalService, iScope, iSocketNTPSyncService, iClockService) {
-
-        // iIntervalService and iScope are only needed to establish a heartBeat, so they are only needed
-        // in the constructor, and are not stored in the class.
+class TrueTimeCalculator {
+    constructor(iHTTPService, iSocketNTPSyncService, iServer2NTPDeltaService, iClockService) {
 
         this.fHTTPService = iHTTPService;
         this.fClockService = iClockService;
         this.fSocketNTPSyncService = iSocketNTPSyncService;
+        this.fServer2NTPDeltaService = iServer2NTPDeltaService;
 
-        this.fServerData = null;
-        this.fTitle = "UberTimeSync";
-        this.fStringData = "No Data";
-        this.fClientData = null;
-        this.fLastServerErrorResponse = null;
-        this.fRealTimeSyncCount = 0;
-
-        this.clientToServerTimeSync();
-
-        AngularInstallIntervalFunction(() => {
-            this.heartBeat();
-        }, kHeartBeatFrequencyMS, iIntervalService, iScope);
-
-        AngularInstallIntervalFunction(() => {
-            this.clientToServerTimeSync();
-        }, kServerNTPDeltaRequestFrequencyMS, iIntervalService, iScope);
-    }
-
-    heartBeat() {
-
-        this.fSocketNTPData = this.fSocketNTPSyncService.getOffsetAndLatency();
-        if (this.fSocketNTPData === null) {
-            this.fSocketNTPData = {
-                fAverageOffset: "No Data Yet",
-                fAverageLatency: "No Data Yet",
-                fNumberOfSamples: 0
-            };
-        }
-
-        this.fRealTimeSyncCount += 1.0;
-
-        const clientNow = this.fClockService.Now();
-        const adjustedClientNow = this.TrueNowTimeMS();
-        this.fClientData = {
-            fSystemTime: clientNow,
-            fMostPreciseTime: adjustedClientNow
-        };
-    }
-
-    clientToServerTimeSync() {
-        var timeRequest = this.fHTTPService({
-            method: 'GET',
-            url: '/getNTPSyncData'
-        });
-
-        timeRequest
-            .then((response) => {
-                this.fServerData = response.data;
-                this.fClientData = {
-                    fSystemTime: null,
-                    fAdjustedSystemTime: null
-                };
-                this.fStringData = JSON.stringify(this.fServerData);
-            }).catch((response) => {
-                this.fLastServerErrorResponse = response;
-            });
     }
 
     TrueNowTimeMS() {
@@ -77,12 +18,15 @@ class TimeController {
         var clientToServerDelta = 0;
         var serverToNTPDelta = 0;
 
-        if (this.fSocketNTPData !== null) {
-            clientToServerDelta = this.fSocketNTPData.fAverageOffset;
+        const clientServerNTPDeltaData = this.fSocketNTPSyncService.getOffsetAndLatency();
+        const serverToNTPDeltaData = this.fServer2NTPDeltaService.getServerToNTPLatency();
+
+        if (clientServerNTPDeltaData !== null) {
+            clientToServerDelta = clientServerNTPDeltaData.fAverageOffset;
         }
 
-        if (this.fServerData !== null) {
-            serverToNTPDelta = this.fServerData.fDeltaData.fServerNTPDelta;
+        if (serverToNTPDeltaData !== null) {
+            serverToNTPDelta = serverToNTPDeltaData.fDeltaData.fServerNTPDelta;
         }
 
         var calculatedNowTime = clientNow - clientToServerDelta - serverToNTPDelta;
@@ -92,17 +36,39 @@ class TimeController {
 
 }
 
-gApp.controller("TimeSyncController", ['$http', '$interval', '$scope', 'SocketNTPSync', 'LocalClockService',
-    function($http, $interval, $scope, SocketNTPSync, iClockService) {
+gApp.controller("TimeSyncController", ['$http',
+    '$interval',
+    '$scope',
+    'SocketNTPSync',
+    'Server2NTPDelta',
+    'LocalClockService',
+    function($http,
+        $interval,
+        $scope,
+        SocketNTPSync,
+        Server2NTPDelta,
+        iClockService) {
 
-        const timeControllerInstance = new TimeController($http, $interval, $scope, SocketNTPSync,
+        this.fRealTimeSyncCount = 0;
+        this.fTimeData = null;
+
+        const trueTimeCalculator = new TrueTimeCalculator($http, SocketNTPSync, Server2NTPDelta,
             iClockService);
 
-        this.fTC = timeControllerInstance;
+        const heartBeat = () => {
 
-        this.TrueNowTimeMS = () => {
-            return timeControllerInstance.TrueNowTimeMS();
+            this.fRealTimeSyncCount += 1.0;
+
+            const clientNow = iClockService.Now();
+            const adjustedClientNow = trueTimeCalculator.TrueNowTimeMS();
+            this.fClientData = {
+                fSystemTime: clientNow,
+                fMostPreciseTime: adjustedClientNow
+            };
         };
 
+        AngularInstallIntervalFunction(() => {
+            heartBeat();
+        }, kHeartBeatFrequencyMS, $interval, $scope);
     }
 ]);

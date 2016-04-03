@@ -30,8 +30,8 @@ function clientToServerTimeSync(iAsyncService, iHTTPService) {
     return deferred.promise;
 }
 
-gApp.factory('Server2NTPDelta', ['$rootScope', '$http', '$interval', '$scope', '$q',
-    function($rootScope, $http, $interval, $scope, $q) {
+gApp.factory('Server2NTPDelta', ['$rootScope', '$http', '$interval', '$q',
+    function($rootScope, $http, $interval, $q) {
 
         class SERVER2NTP {
             constructor() {
@@ -55,7 +55,7 @@ gApp.factory('Server2NTPDelta', ['$rootScope', '$http', '$interval', '$scope', '
 
             startPinging() {
                 // Set up an interval and cancel it once rootScope is going down
-
+                this.doThePing();
                 AngularInstallIntervalFunction(() => {
                     this.doThePing();
                 }, kServerNTPDeltaRequestFrequencyMS, $interval, $rootScope);
