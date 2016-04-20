@@ -15,7 +15,7 @@
     "express": "^4.13.4",
     "ntp-client": "^0.5.3",
     "ntpsync": "^0.2.0",
-    "ntpsync-client": "git://github.com/nikolai3d/ntpsync-client.git#master",
+    "ntpsync-client": "git://github.com/nikolai3d/ntpsync-client.git#v.0.0.2",
     "q": "^1.4.1",
     "semantic-ui": "^2.1.8",
     "socket-ntp": "^0.1.0",
